@@ -1,25 +1,16 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const connectDB = require("./db/connect");
+const dotenv = require("dotenv");
+const userRoutes = require("./routes/userRoutes");
+const scheduleRoutes = require("./routes/userRoutes");
 
+dotenv.config();
 const app = express();
-const PORT = 5000;
+connectDB();
 
-// Middleware
-app.use(cors());
 app.use(express.json());
+app.use("/api/users", userRoutes);
+app.use("/api/schedule", scheduleRoutes);
 
-// MongoDB Connection
-mongoose.connect("mongodb://localhost:27017/eduTimeSync")
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
-
-// Test Route
-app.get('/', (req, res) => {
-  res.send('Hello from Express!');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
