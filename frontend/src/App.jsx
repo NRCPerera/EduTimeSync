@@ -1,14 +1,18 @@
-import { useEffect } from 'react';
-import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SignIn from './pages/Common/SignIn';
+import SignUp from './pages/Common/SignUp';
+import Home from './pages/Common/Home';
 
 function App() {
-  useEffect(() => {
-    axios.get('/api') // Use '/api' instead of just '/'
-      .then(response => console.log(response.data))
-      .catch(err => console.log(err));
-  }, []);
-
-  return <div>MERN App</div>;
+  return (
+    <Router>
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/sign-up" element={<SignUp />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
