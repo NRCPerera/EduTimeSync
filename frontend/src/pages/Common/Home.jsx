@@ -1,10 +1,10 @@
 import React from 'react'
-import Header from '../../components/Header'
+import AdminHeader from '../../components/AdminHeader'
 
 const Home = () => {
   return (
     <div>
-        <Header />
+        <AdminHeader />
         <div className='flex items-center justify-center min-h-screen min-w-screen bg-gray-200'>
             <div className='p-6 bg-white rounded-lg shadow-lg' style={{ maxWidth: '500px', width: '100%' }}>
             <h1 className='text-3xl text-center font-semibold my-7'>Home</h1>
