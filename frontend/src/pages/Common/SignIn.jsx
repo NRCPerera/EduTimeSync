@@ -134,7 +134,7 @@ function App() {
         <div className="text-center text-sm">
           <span className="text-gray-600">Don't have an account?</span>
           {' '}
-          <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <a href="sign-up" className="font-medium text-indigo-600 hover:text-indigo-500">
             Sign up
           </a>
         </div>
