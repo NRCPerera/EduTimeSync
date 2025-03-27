@@ -2,7 +2,6 @@ const express = require("express");
 const connectDB = require("./db/connect");
 const dotenv = require("dotenv");
 const scheduleRoutes = require("./routes/scheduleRoute");
-const authRoutes = require('./routes/authRoutes');
 const errorHandler = require('./middleware/errorHandler');
 const cors = require('cors'); // Add this line
 
@@ -14,7 +13,6 @@ app.use(cors({
     origin: 'http://localhost:5173' // Adjust if your frontend port differs
   }));
 app.use(express.json());
-app.use('/api/auth', authRoutes);
 app.use("/api/schedule", scheduleRoutes);
 
 app.use(errorHandler);

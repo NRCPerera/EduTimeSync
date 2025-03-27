@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './pages/Common/Login';
-import SignUp from './pages/Common/SignUp';
 import Home from './pages/Common/Home';
 import Eventspage from './pages/LIC_pages/Evetspage';
 import NotifyPage from './pages/LIC_pages/NotifyPage';
@@ -18,8 +16,6 @@ function App() {
     <Router>
       <Routes>
         <Route path='/' element={<Home />} />
-        <Route path="/sign-in" element={<Login />} />
-        <Route path="/sign-up" element={<SignUp />} />
         <Route path='/Event-page'element={<Eventspage/>} />
         <Route path='/notify-page'element={<NotifyPage/>} />
         <Route path='/student-dashboard' element={<StudentDashboard />} />
