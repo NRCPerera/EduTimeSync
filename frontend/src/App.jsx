@@ -8,6 +8,7 @@ import StudentDashboard from './pages/Student/StudentDashBoard';
 import AdminDashboard from './pages/Admin/AdminDashBoard';
 import ExaminerDashboard from './pages/Examiner/ExaminerDashBoard';
 import LICDashboard from './pages/LIC/LICDashBoard';
+import FilterAvailabilityPage from './pages/LIC_pages/FilterAvailabilityPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path='/admin-dashboard' element={<AdminDashboard />} />
         <Route path='/examiner-dashboard' element={<ExaminerDashboard />} />
         <Route path='/lic-dashboard' element={<LICDashboard />} />
+        <Route path='/filter-availability' element={<FilterAvailabilityPage />} />
       </Routes>
     </Router>
   );

@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 
 const NotifyPage = () => {
-  // Mock data for events and examiners
   const [events] = useState([
     {
       id: '1',

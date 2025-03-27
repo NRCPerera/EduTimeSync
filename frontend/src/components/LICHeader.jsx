@@ -6,7 +6,7 @@ export default function LICHeader() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   return (
-    <header className="bg-emerald-600 text-white shadow-lg">
+    <header className="bg-[#2C3E50] text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo & Brand */}
