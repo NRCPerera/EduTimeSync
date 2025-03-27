@@ -1,14 +1,50 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Github, Twitter } from 'lucide-react';
+import axios from 'axios';
 
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error,setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle sign in logic here
-    console.log('Sign in attempt with:', { email, password });
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/users/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Sign in failed');
+      }
+
+      console.log('Sign in successful:', data);
+      setSuccess('Sign in successful!');
+      localStorage.setItem('token', data.token); // Store token for authenticated requests
+      // Optionally redirect based on role
+      if (data.user.role === 'Admin') {
+        window.location.href = '/admin';
+      } else if (data.user.role === 'LIC') {
+        window.location.href = '/lIC';
+      }else if (data.user.role === 'Examiner') {
+        window.location.href = '/examiner';
+      }else if (data.user.role === 'Student') {
+        window.location.href = '/student';
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Sign in error:', err);
+    }
   };
 
   return (

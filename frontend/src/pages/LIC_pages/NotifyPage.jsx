@@ -10,6 +10,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react';
+import LICHeader from '../../components/LICHeader';
 
 const NotifyPage = () => {
   const [events] = useState([
@@ -93,6 +94,8 @@ const NotifyPage = () => {
   };
 
   return (
+    <div>
+      <LICHeader />
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div className="px-4 sm:px-0">
         <div className="sm:flex sm:items-center">
@@ -239,6 +242,7 @@ const NotifyPage = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
