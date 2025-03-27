@@ -5,6 +5,7 @@ const cors = require('cors');
 const express = require("express");
 const scheduleRoutes = require("./routes/scheduleRoute");
 const errorHandler = require('./middleware/errorHandler');
+const ExaminerAvailabilityRoutes = require('./routes/ExamineravailabilityRoute');
 
 dotenv.config();
 const app = express();
@@ -19,6 +20,7 @@ app.use(express.json()); // Parse JSON bodies
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/examiner', ExaminerAvailabilityRoutes);
 
 // Error handling middleware (optional)
 app.use((err, req, res, next) => {

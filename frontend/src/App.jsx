@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 import Home from './pages/Common/Home';
-import EventsPage from './pages/LIC/Evetspage';
 import NotifyPage from './pages/LIC/NotifyPage';
 import Login from './pages/Common/SignIn';
 import SignUp from './pages/Common/SignUp';
@@ -13,6 +12,8 @@ import ExaminerSchedule from './pages/Examiner/ExaminerSchedule';
 import StudentSchedule from './pages/Student/StudentSchedule';
 import RescheduleRequests from './pages/LIC/RescheduleRequests';
 import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
+import EventsPage from './pages/LIC/Evetspage';
+import ExaminerAvailability from './pages/Examiner/ExaminerAvailability';
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -23,6 +24,7 @@ const ProtectedRoute = ({ element, allowedRoles }) => {
 
   return allowedRoles.includes(userRole) ? element : <Navigate to="/" />;
 };
+
 
 function App() {
   return (
@@ -70,6 +72,10 @@ function App() {
         <Route
           path="/notify-page"
           element={<ProtectedRoute element={<EventsPage />} allowedRoles={['LIC']} />}
+        />
+        <Route
+          path="/examiner-availability"
+          element={<ProtectedRoute element={<ExaminerAvailability />} allowedRoles={['Examiner']} />}
         />
       </Routes>
     </Router>
