@@ -6,6 +6,7 @@ const express = require("express");
 const scheduleRoutes = require("./routes/scheduleRoute");
 const errorHandler = require('./middleware/errorHandler');
 const ExaminerAvailabilityRoutes = require('./routes/ExamineravailabilityRoute');
+const assignedEventRoutes = require('./routes/AssignedEventsRoute');
 
 dotenv.config();
 const app = express();
@@ -21,6 +22,7 @@ app.use(express.json()); // Parse JSON bodies
 app.use('/api/users', userRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/examiner', ExaminerAvailabilityRoutes);
+app.use('/api/assigned', assignedEventRoutes);
 
 // Error handling middleware (optional)
 app.use((err, req, res, next) => {

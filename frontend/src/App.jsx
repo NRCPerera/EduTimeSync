@@ -14,6 +14,7 @@ import RescheduleRequests from './pages/LIC/RescheduleRequests';
 import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
 import EventsPage from './pages/LIC/Evetspage';
 import ExaminerAvailability from './pages/Examiner/ExaminerAvailability';
+import AssignEvents from './pages/Examiner/AssignEvents';
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -76,6 +77,10 @@ function App() {
         <Route
           path="/examiner-availability"
           element={<ProtectedRoute element={<ExaminerAvailability />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+          path='/assign-events'
+          element={<ProtectedRoute element={<AssignEvents />} allowedRoles={['Examiner']} />}
         />
       </Routes>
     </Router>
