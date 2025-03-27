@@ -33,13 +33,13 @@ function App() {
       localStorage.setItem('token', data.token); // Store token for authenticated requests
       // Optionally redirect based on role
       if (data.user.role === 'Admin') {
-        window.location.href = '/admin';
+        window.location.href = '/admin-dashboard';
       } else if (data.user.role === 'LIC') {
-        window.location.href = '/lIC';
+        window.location.href = '/lic-dashboard';
       }else if (data.user.role === 'Examiner') {
-        window.location.href = '/examiner';
+        window.location.href = '/examiner-dashboard';
       }else if (data.user.role === 'Student') {
-        window.location.href = '/student';
+        window.location.href = '/student-dashboard';
       }
     } catch (err) {
       setError(err.message);

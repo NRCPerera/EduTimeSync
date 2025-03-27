@@ -5,11 +5,15 @@ const SignUp = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student' // Default role
-  });
+    nic: '',
+    phoneNumber: '',
+    address: '',
+    role: 'LIC' // Default role
+});
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,11 +47,11 @@ const SignUp = () => {
       return setErrorMessage('Please enter a valid 10-digit phone number.');
     }
 
-    const nicRegex = /^[0-9]{9}[vVxX]$/;
-    if (!nicRegex.test(formData.nic)) {
-      setLoading(false);
-      return setErrorMessage('Please enter a valid NIC (e.g., 123456789V).');
-    }
+    // const nicRegex = /^[0-9]{9}[vVxX]$/;
+    // if (!nicRegex.test(formData.nic)) {
+    //   setLoading(false);
+    //   return setErrorMessage('Please enter a valid NIC (e.g., 123456789V).');
+    // }
 
     if (formData.password !== formData.confirmPassword) {
       setLoading(false);
@@ -67,6 +71,7 @@ const SignUp = () => {
           nic: formData.nic,
           phoneNumber: formData.phoneNumber,
           address: formData.address,
+          role: formData.role,
         }),
       });
 
@@ -96,49 +101,49 @@ const SignUp = () => {
             type='text'
             placeholder='Username'
             className='border border-gray-300 p-3 rounded-lg w-full'
-            id='username'
+            name='username'
             onChange={handleChange}
           />
           <input
             type='email'
             placeholder='Email'
             className='border p-3 border-gray-300 rounded-lg w-full'
-            id='email'
+            name='email'
             onChange={handleChange}
           />
           <input
             type='password'
             placeholder='Password'
             className='border border-gray-300 p-3 rounded-lg w-full'
-            id='password'
+            name='password'
             onChange={handleChange}
           />
           <input
             type='password'
             placeholder='Confirm Password'
             className='border border-gray-300 p-3 rounded-lg w-full'
-            id='confirmPassword'
+            name='confirmPassword'
             onChange={handleChange}
           />
           <input
             type='text'
             placeholder='NIC'
             className='border border-gray-300 p-3 rounded-lg w-full'
-            id='nic'
+            name='nic'
             onChange={handleChange}
           />
           <input
             type='text'
             placeholder='Telephone Number'
             className='border border-gray-300 p-3 rounded-lg w-full'
-            id='phoneNumber'
+            name='phoneNumber'
             onChange={handleChange}
           />
           <input
             type='text'
             placeholder='Address'
             className='border border-gray-300 p-3 rounded-lg w-full'
-            id='address'
+            name='address'
             onChange={handleChange}
           />
           <button

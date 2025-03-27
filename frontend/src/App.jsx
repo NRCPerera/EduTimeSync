@@ -1,6 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import ReactDOM from 'react-dom/client';
 import Home from './pages/Common/Home';
-import Eventspage from './pages/LIC/Evetspage';
+import EventsPage from './pages/LIC/Evetspage';
 import NotifyPage from './pages/LIC/NotifyPage';
 import Login from './pages/Common/SignIn';
 import SignUp from './pages/Common/SignUp';
@@ -12,29 +13,68 @@ import ExaminerSchedule from './pages/Examiner/ExaminerSchedule';
 import StudentSchedule from './pages/Student/StudentSchedule';
 import RescheduleRequests from './pages/LIC/RescheduleRequests';
 import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
-import EventsPage from './pages/LIC/Evetspage';
+
+const ProtectedRoute = ({ element, allowedRoles }) => {
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/sign-in" />;
+
+  const decoded = JSON.parse(atob(token.split('.')[1])); // Decode JWT payload
+  const userRole = decoded.role;
+
+  return allowedRoles.includes(userRole) ? element : <Navigate to="/" />;
+};
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path='/' element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/sign-in" element={<Login />} />
         <Route path="/sign-up" element={<SignUp />} />
-        <Route path='/event-page'element={<Eventspage/>} />
-        <Route path='/notify-page'element={<NotifyPage/>} />
-        <Route path='/student-dashboard' element={<StudentDashboard />} />
-        <Route path='/admin-dashboard' element={<AdminDashboard />} />
-        <Route path='/examiner-dashboard' element={<ExaminerDashboard />} />
-        <Route path='/lic-dashboard' element={<LICDashboard />} />
-        <Route path='/examiner-schedule' element={<ExaminerSchedule />} />
-        <Route path='/student-schedule' element={<StudentSchedule />} />
-        <Route path='/reschedule-requests' element={<RescheduleRequests />} />
-        <Route path='/filter-availability' element={<FilterAvailabilityPage />} />
-        <Route path='/events-page' element={<EventsPage />} />
+        <Route
+          path="/student-dashboard"
+          element={<ProtectedRoute element={<StudentDashboard />} allowedRoles={['Student']} />}
+        />
+        <Route
+          path="/admin-dashboard"
+          element={<ProtectedRoute element={<AdminDashboard />} allowedRoles={['Admin']} />}
+        />
+        <Route
+          path="/examiner-dashboard"
+          element={<ProtectedRoute element={<ExaminerDashboard />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+          path="/lic-dashboard"
+          element={<ProtectedRoute element={<LICDashboard />} allowedRoles={['LIC']} />}
+        />
+        <Route
+          path="/examiner-schedule"
+          element={<ProtectedRoute element={<ExaminerSchedule />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+          path="/student-schedule"
+          element={<ProtectedRoute element={<StudentSchedule />} allowedRoles={['Student']} />}
+        />
+        <Route
+          path="/reschedule-requests"
+          element={<ProtectedRoute element={<RescheduleRequests />} allowedRoles={['LIC']} />}
+        />
+        <Route
+          path="/filter-availability"
+          element={<ProtectedRoute element={<FilterAvailabilityPage />} allowedRoles={['LIC']} />}
+        />
+        <Route
+          path="/events-page" 
+          element={<ProtectedRoute element={<NotifyPage />} allowedRoles={['LIC']} />} 
+        />
+        <Route
+          path="/notify-page"
+          element={<ProtectedRoute element={<EventsPage />} allowedRoles={['LIC']} />}
+        />
       </Routes>
     </Router>
   );
 }
+
 
 export default App;
