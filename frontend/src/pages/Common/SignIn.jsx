@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Github, Twitter } from 'lucide-react';
-import axios from 'axios';
+//import axios from 'axios';
 
 function App() {
   const [email, setEmail] = useState('');

@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Common/Home';
-import Eventspage from './pages/LIC_pages/Evetspage';
-import NotifyPage from './pages/LIC_pages/NotifyPage';
+import Eventspage from './pages/LIC/Evetspage';
+import NotifyPage from './pages/LIC/NotifyPage';
+import Login from './pages/Common/SignIn';
+import SignUp from './pages/Common/SignUp';
 import StudentDashboard from './pages/Student/StudentDashBoard';
 import AdminDashboard from './pages/Admin/AdminDashBoard';
 import ExaminerDashboard from './pages/Examiner/ExaminerDashBoard';
@@ -9,7 +11,8 @@ import LICDashboard from './pages/LIC/LICDashBoard';
 import ExaminerSchedule from './pages/Examiner/ExaminerSchedule';
 import StudentSchedule from './pages/Student/StudentSchedule';
 import RescheduleRequests from './pages/LIC/RescheduleRequests';
-import FilterAvailabilityPage from './pages/LIC_pages/FilterAvailabilityPage';
+import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
+import EventsPage from './pages/LIC/Evetspage';
 
 function App() {
   return (
@@ -28,6 +31,7 @@ function App() {
         <Route path='/student-schedule' element={<StudentSchedule />} />
         <Route path='/reschedule-requests' element={<RescheduleRequests />} />
         <Route path='/filter-availability' element={<FilterAvailabilityPage />} />
+        <Route path='/events-page' element={<EventsPage />} />
       </Routes>
     </Router>
   );
