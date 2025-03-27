@@ -1,16 +1,22 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function SignUp() {
-  const [formData, setFormData] = useState({});
+const SignUp = () => {
   const [errorMessage, setErrorMessage] = useState(null);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'student' // Default role
+  });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.id]: e.target.value,
+      [e.target.name]: e.target.value
     });
   };
 
@@ -149,4 +155,6 @@ export default function SignUp() {
       </div>
     </div>
   );
-}
+};
+
+export default SignUp;
