@@ -29,7 +29,6 @@ function App() {
         <Route path='/examiner-schedule' element={<ExaminerSchedule />} />
         <Route path='/student-schedule' element={<StudentSchedule />} />
         <Route path='/reschedule-requests' element={<RescheduleRequests />} />
-      </Routes> 
         <Route path='/filter-availability' element={<FilterAvailabilityPage />} />
       </Routes>
     </Router>
