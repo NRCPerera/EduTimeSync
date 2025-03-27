@@ -36,7 +36,7 @@ export default function ExaminerHeader() {
               <GraduationCap className="h-4 w-4" />
               Grade Students
             </a>
-            <a href="#" className="hover:text-amber-200 flex items-center gap-1">
+            <a href="/examiner-schedule" className="hover:text-amber-200 flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 View Schedule
             </a>
@@ -88,7 +88,7 @@ export default function ExaminerHeader() {
             <a href="#" className="block py-2 hover:text-amber-200">Dashboard</a>
             <a href="#" className="block py-2 hover:text-amber-200">Set Availability</a>
             <a href="#" className="block py-2 hover:text-amber-200">Grade Students</a>
-            <a href="#" className="block py-2 hover:text-amber-200">View Schedule</a>
+            <a href="/examiner-schedule" className="block py-2 hover:text-amber-200">View Schedule</a>
           </div>
         )}
       </div>

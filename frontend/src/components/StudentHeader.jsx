@@ -28,7 +28,7 @@ export default function StudentHeader() {
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </a>
-            <a href="#" className="hover:text-blue-200 flex items-center gap-1">
+            <a href="/student-schedule" className="hover:text-blue-200 flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               View Schedule
             </a>
@@ -82,7 +82,7 @@ export default function StudentHeader() {
           <div className="md:hidden py-4">
             <a href="#" className="block py-2 hover:text-blue-200">Home</a>
             <a href="#" className="block py-2 hover:text-blue-200">Dashboard</a>
-            <a href="#" className="block py-2 hover:text-blue-200">View Schedule</a>
+            <a href="/student-schedule" className="block py-2 hover:text-blue-200">View Schedule</a>
             <a href="#" className="block py-2 hover:text-blue-200">Join Meeting</a>
           </div>
         )}

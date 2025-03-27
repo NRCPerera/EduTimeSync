@@ -6,6 +6,9 @@ import StudentDashboard from './pages/Student/StudentDashBoard';
 import AdminDashboard from './pages/Admin/AdminDashBoard';
 import ExaminerDashboard from './pages/Examiner/ExaminerDashBoard';
 import LICDashboard from './pages/LIC/LICDashBoard';
+import ExaminerSchedule from './pages/Examiner/ExaminerSchedule';
+import StudentSchedule from './pages/Student/StudentSchedule';
+import RescheduleRequests from './pages/LIC/RescheduleRequests';
 
 function App() {
   return (
@@ -18,7 +21,10 @@ function App() {
         <Route path='/admin-dashboard' element={<AdminDashboard />} />
         <Route path='/examiner-dashboard' element={<ExaminerDashboard />} />
         <Route path='/lic-dashboard' element={<LICDashboard />} />
-      </Routes>
+        <Route path='/examiner-schedule' element={<ExaminerSchedule />} />
+        <Route path='/student-schedule' element={<StudentSchedule />} />
+        <Route path='/reschedule-requests' element={<RescheduleRequests />} />
+      </Routes> 
     </Router>
   );
 }

@@ -1,7 +1,18 @@
-const express = require("express");
-const { schedulePresentation } = require("../controllers/scheduleController");
-
+const express = require('express');
 const router = express.Router();
-router.post("/schedule", schedulePresentation);
+const {
+  getAllSchedules,
+  createSchedule,
+  getScheduleById,
+  validateSchedule
+} = require('../controllers/scheduleController');
+const auth = require('../middleware/auth');
+
+router.route('/')
+  .get(auth, getAllSchedules)
+  .post(auth, validateSchedule, createSchedule);
+
+router.route('/:id')
+  .get(auth, getScheduleById);
 
 module.exports = router;
