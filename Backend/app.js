@@ -1,3 +1,8 @@
+const connectDB = require('./db/connect');
+const dotenv = require('dotenv');
+const userRoutes = require('./routes/userRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes'); // Assuming this exists
+const cors = require('cors');
 const express = require("express");
 const connectDB = require("./db/connect");
 const dotenv = require("dotenv");
@@ -7,13 +12,24 @@ const cors = require('cors'); // Add this line
 
 dotenv.config();
 const app = express();
+
+// Connect to MongoDB
 connectDB();
 
-app.use(cors({
-    origin: 'http://localhost:5173' // Adjust if your frontend port differs
-  }));
-app.use(express.json());
-app.use("/api/schedule", scheduleRoutes);
+// Middleware
+app.use(cors()); // Enable CORS for frontend
+app.use(express.json()); // Parse JSON bodies
+
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/schedule', scheduleRoutes);
+
+// Error handling middleware (optional)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});
 
 app.use(errorHandler);
 
