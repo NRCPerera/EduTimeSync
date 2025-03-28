@@ -96,6 +96,18 @@ function App() {
           path="/module-list"
           element={<ProtectedRoute element={<ModuleList />} allowedRoles={['Admin']} />}
         />
+        <Route
+          path="/examiner-availability"
+          element={<ProtectedRoute element={<ExaminerAvailability />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+          path="/assign-events"
+          element={<ProtectedRoute element={<AssignEvents />} allowedRoles={['LIC']} />}
+        />
+        <Route
+          path="/std-evalutation"
+          element={<ProtectedRoute element={<StdEvalutation />} allowedRoles={['Examiner']} />}
+        />
       </Routes>
     </Router>
   );
