@@ -10,7 +10,7 @@ const assignedEventRoutes = require('./routes/AssignedEventsRoute');
 const evaluationRoutes = require('./routes/EvaluationRoutes');
 const eventRoutes = require('./routes/EventRoutes');
 const filterexaminerRoutes = require('./routes/FilterAvailabilityRoutes');
-
+const rescheduleRequestRoutes = require("./routes/rescheduleRequestRoute");
 
 dotenv.config();
 const app = express();
@@ -30,6 +30,7 @@ app.use('/api/assigned', assignedEventRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api', eventRoutes);
 app.use('/api', filterexaminerRoutes);
+app.use('/api/reschedule', rescheduleRequestRoutes);
 
 // Error handling middleware (optional)
 app.use((err, req, res, next) => {

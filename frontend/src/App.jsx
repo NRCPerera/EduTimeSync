@@ -16,6 +16,8 @@ import EventsPage from './pages/LIC/Evetspage';
 import ExaminerAvailability from './pages/Examiner/ExaminerAvailability';
 import AssignEvents from './pages/Examiner/AssignEvents';
 import StdEvalutation from './pages/Examiner/StdEvalutation';
+import UserManagement from './pages/Admin/UserManagement';
+import ExaminerRescheduleRequests from './pages/Examiner/ExaminerRescheduleRequests';
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -76,16 +78,24 @@ function App() {
           element={<ProtectedRoute element={<EventsPage />} allowedRoles={['LIC']} />}
         />
         <Route
-          path="/examiner-availability"
-          element={<ProtectedRoute element={<ExaminerAvailability />} allowedRoles={['Examiner']} />}
+          path="/user-management"
+          element={<ProtectedRoute element={<UserManagement />} allowedRoles={['Admin']} />}
         />
         <Route
-          path='/assign-events'
-          element={<ProtectedRoute element={<AssignEvents />} allowedRoles={['Examiner']} />}
+          path="/examiner-reschedule-requests"
+          element={<ProtectedRoute element={<ExaminerRescheduleRequests />} allowedRoles={['Examiner']} />}
         />
         <Route
         path='/std-evalutation-marks'
         element={<ProtectedRoute element={<StdEvalutation />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+          path="/examiner-availability"
+          element={<ProtectedRoute element={<ExaminerAvailability />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+          path="/assign-events"
+          element={<ProtectedRoute element={<AssignEvents />} allowedRoles={['Examiner']} />}
         />
       </Routes>
     </Router>

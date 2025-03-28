@@ -20,11 +20,11 @@ export default function ExaminerHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="hover:text-amber-200 flex items-center gap-1">
+            <a href="/examiner-dashboard" className="hover:text-amber-200 flex items-center gap-1">
               <Home className="h-4 w-4" />
               Home
             </a>
-            <a href="#" className="hover:text-amber-200 flex items-center gap-1">
+            <a href="/examiner-dashboard" className="hover:text-amber-200 flex items-center gap-1">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </a>
@@ -40,6 +40,7 @@ export default function ExaminerHeader() {
                 <Calendar className="h-4 w-4" />
                 View Schedule
             </a>
+            
           </nav>
 
           {/* User Menu & Notifications */}
@@ -84,8 +85,8 @@ export default function ExaminerHeader() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-4">
-            <a href="#" className="block py-2 hover:text-amber-200">Home</a>
-            <a href="#" className="block py-2 hover:text-amber-200">Dashboard</a>
+            <a href="/examiner-dashboard" className="block py-2 hover:text-amber-200">Home</a>
+            <a href="/examiner-dashboard" className="block py-2 hover:text-amber-200">Dashboard</a>
             <a href="#" className="block py-2 hover:text-amber-200">Set Availability</a>
             <a href="#" className="block py-2 hover:text-amber-200">Grade Students</a>
             <a href="/examiner-schedule" className="block py-2 hover:text-amber-200">View Schedule</a>

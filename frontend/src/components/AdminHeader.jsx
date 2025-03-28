@@ -20,11 +20,11 @@ export default function AdminHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="hover:text-indigo-200 flex items-center gap-1">
+            <a href="/admin-dashboard" className="hover:text-indigo-200 flex items-center gap-1">
               <Home className="h-4 w-4" />
               Home
             </a>
-            <a href="#" className="hover:text-indigo-200 flex items-center gap-1">
+            <a href="/admin-dashboard" className="hover:text-indigo-200 flex items-center gap-1">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </a>
@@ -32,7 +32,7 @@ export default function AdminHeader() {
               <BookOpen className="h-4 w-4" />
               Manage Modules
             </a>
-            <a href="#" className="hover:text-indigo-200 flex items-center gap-1">
+            <a href="/user-management" className="hover:text-indigo-200 flex items-center gap-1">
               <Users className="h-4 w-4" />
               Assign LICs
             </a>
@@ -80,10 +80,10 @@ export default function AdminHeader() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-4">
-            <a href="#" className="block py-2 hover:text-indigo-200">Home</a>
-            <a href="#" className="block py-2 hover:text-indigo-200">Dashboard</a>
+            <a href="/admin-dashboard" className="block py-2 hover:text-indigo-200">Home</a>
+            <a href="/admin-dashboard" className="block py-2 hover:text-indigo-200">Dashboard</a>
             <a href="#" className="block py-2 hover:text-indigo-200">Manage Modules</a>
-            <a href="#" className="block py-2 hover:text-indigo-200">Assign LICs</a>
+            <a href="/user-management" className="block py-2 hover:text-indigo-200">Assign LICs</a>
           </div>
         )}
       </div>

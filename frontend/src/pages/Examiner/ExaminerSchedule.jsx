@@ -2,19 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, ChevronLeft, ChevronRight, CalendarRange } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ExaminerHeader from '../../components/ExaminerHeader';
-import RescheduleForm from './ResheduleForm';
+import RescheduleForm from '../../components/RescheduleForm';
 
 const ExaminerSchedule = () => {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState(null);
-  const [rescheduleForm, setRescheduleForm] = useState({
-    examId: '',
-    newDate: '',
-    newTime: '',
-    reason: '',
-  });
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,7 +26,7 @@ const ExaminerSchedule = () => {
     if (!token) {
       setError('Please log in to view your schedules');
       setLoading(false);
-      navigate('/login');
+      navigate('/sign-in');
       return;
     }
 
@@ -46,12 +40,11 @@ const ExaminerSchedule = () => {
         }
       );
 
+      const data = await response.json();
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
       setSchedules(data.data || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch your schedules');
@@ -71,13 +64,40 @@ const ExaminerSchedule = () => {
 
   const handleReschedule = (exam) => {
     setSelectedExam(exam);
-    setRescheduleForm({
-      examId: exam._id,
-      newDate: exam.scheduledTime.date,
-      newTime: exam.scheduledTime.startTime,
-      reason: '',
-    });
     setIsRescheduleModalOpen(true);
+  };
+
+  // In ExaminerSchedule.jsx
+  const handleSubmitReschedule = async (formData) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/reschedule/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+        body: JSON.stringify({
+          scheduleId: formData.examId,
+          proposedTime: {
+            date: formData.newDate,
+            startTime: formData.newStartTime, // Expects "HH:mm"
+            endTime: formData.newEndTime,     // Expects "HH:mm"
+          },
+          reason: formData.reason,
+        }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit reschedule request');
+      }
+  
+      setIsRescheduleModalOpen(false);
+      fetchSchedules();
+    } catch (err) {
+      setError(err.message);
+      console.error('Reschedule error:', err);
+    }
   };
 
   return (
@@ -148,7 +168,7 @@ const ExaminerSchedule = () => {
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Users className="h-5 w-5 mr-2" />
-                      <span>1 student</span>
+                      <span>Student: {exam.studentId?.email || 'Unknown'}</span> {/* Updated to show student email */}
                     </div>
                     {exam.googleMeetLink && (
                       <div className="flex items-center text-gray-600 col-span-full">
@@ -169,10 +189,8 @@ const ExaminerSchedule = () => {
       {isRescheduleModalOpen && selectedExam && (
         <RescheduleForm
           selectedExam={selectedExam}
-          rescheduleForm={rescheduleForm}
-          setRescheduleForm={setRescheduleForm}
-          handleCloseModal={() => setIsRescheduleModalOpen(false)}
-          handleSubmitReschedule={() => setIsRescheduleModalOpen(false)}
+          onClose={() => setIsRescheduleModalOpen(false)}
+          onSubmit={handleSubmitReschedule}
         />
       )}
     </div>
