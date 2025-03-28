@@ -12,6 +12,10 @@ import ExaminerSchedule from './pages/Examiner/ExaminerSchedule';
 import StudentSchedule from './pages/Student/StudentSchedule';
 import RescheduleRequests from './pages/LIC/RescheduleRequests';
 import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
+import EventsPage from './pages/LIC/Evetspage';
+import ExaminerAvailability from './pages/Examiner/ExaminerAvailability';
+import AssignEvents from './pages/Examiner/AssignEvents';
+import StdEvalutation from './pages/Examiner/StdEvalutation';
 import UserManagement from './pages/Admin/UserManagement';
 import ExaminerRescheduleRequests from './pages/Examiner/ExaminerRescheduleRequests';
 import CreateModule from './pages/Admin/CreateModule';
@@ -69,11 +73,11 @@ function App() {
           element={<ProtectedRoute element={<FilterAvailabilityPage />} allowedRoles={['LIC']} />}
         />
         <Route
-          path="/events-page" 
+          path="/notify-page" 
           element={<ProtectedRoute element={<NotifyPage />} allowedRoles={['LIC']} />} 
         />
         <Route
-          path="/notify-page"
+          path="/event-page"
           element={<ProtectedRoute element={<EventsPage />} allowedRoles={['LIC']} />}
         />
         <Route

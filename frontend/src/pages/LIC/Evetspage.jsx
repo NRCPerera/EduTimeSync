@@ -1,40 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Plus, Edit, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import LICHeader from '../../components/LICHeader';
+import axios from 'axios';
 
 const EventsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
-  
-  const [events, setEvents] = useState([
-    {
-      id: '1',
-      name: 'Final Year Project Presentation',
-      date: '2024-03-25T10:00',
-      duration: 30,
-      examiners: ['Dr. Smith', 'Dr. Johnson'],
-      module: 'CS4001',
-      status: 'upcoming',
-    },
-    {
-      id: '2',
-      name: 'Master\'s Thesis Defense',
-      date: '2024-03-26T14:00',
-      duration: 45,
-      examiners: ['Dr. Williams', 'Dr. Brown'],
-      module: 'CS5002',
-      status: 'pending',
-    },
-  ]);
-
-  const examiners = [
-    { id: '1', name: 'Dr. Smith', available: true, expertise: 'AI & Machine Learning' },
-    { id: '2', name: 'Dr. Johnson', available: true, expertise: 'Software Engineering' },
-    { id: '3', name: 'Dr. Williams', available: false, expertise: 'Database Systems' },
-    { id: '4', name: 'Dr. Brown', available: true, expertise: 'Computer Networks' },
-  ];
+  const [events, setEvents] = useState([]);
+  const [examiners, setExaminers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [newEvent, setNewEvent] = useState({
     name: '',
@@ -44,55 +21,82 @@ const EventsPage = () => {
     module: '',
   });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log('Fetching events from: http://localhost:5000/api/get-events');
+        const [eventsResponse, examinersResponse] = await Promise.all([
+          axios.get('http://localhost:5000/api/get-events'),
+          axios.get('http://localhost:5000/api/get-examiners'),
+        ]);
+        console.log('Events response:', eventsResponse.data);
+        console.log('Examiners response:', examinersResponse.data);
+        setEvents(eventsResponse.data.map(event => ({ ...event, id: event._id })));
+        setExaminers(examinersResponse.data.map(name => ({ name, available: true })));
+        setLoading(false);
+      } catch (err) {
+        console.error('Fetch error:', err.response?.status, err.response?.data || err.message);
+        setError(`Failed to load data: ${err.response?.status} - ${err.response?.data?.message || err.message}`);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-  
     setNewEvent(prev => {
-      // Handle checkbox inputs (examiners)
       if (type === 'checkbox') {
         return {
           ...prev,
           examiners: checked
-            ? [...prev.examiners, value] // Add examiner if checked
-            : prev.examiners.filter(examiner => examiner !== value) // Remove if unchecked
+            ? [...prev.examiners, value]
+            : prev.examiners.filter(examiner => examiner !== value),
         };
       }
       if (type === 'number') {
-        return {
-          ...prev,
-          [name]: Number(value)
-        };
+        return { ...prev, [name]: Number(value) };
       }
-      return {
-        ...prev,
-        [name]: value
-      };
+      return { ...prev, [name]: value };
     });
   };
-  const handleCreateEvent = (e) => {
+
+  const handleCreateEvent = async (e) => {
     e.preventDefault();
-    const event = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...newEvent,
-      status: 'pending',
-    };
-    setEvents([...events, event]);
-    setNewEvent({ name: '', date: '', duration: 30, examiners: [], module: '' });
-    setIsCreateModalOpen(false);
-    showSuccessMessage(selectedEvent ? 'Event updated successfully!' : 'Event created successfully!');
+    try {
+      if (selectedEvent) {
+        const response = await axios.put(`http://localhost:5000/api/update-events/${selectedEvent.id}`, newEvent);
+        setEvents(events.map(event => (event.id === selectedEvent.id ? { ...response.data, id: response.data._id } : event)));
+        showSuccessMessage('Event updated successfully!');
+      } else {
+        const response = await axios.post('http://localhost:5000/api/set-events', newEvent);
+        setEvents([...events, { ...response.data, id: response.data._id }]);
+        showSuccessMessage('Event created successfully!');
+      }
+      setNewEvent({ name: '', date: '', duration: 30, examiners: [], module: '' });
+      setIsCreateModalOpen(false);
+      setSelectedEvent(null);
+    } catch (error) {
+      setError('Failed to save event: ' + (error.response?.data?.message || error.message));
+    }
   };
 
-  const handleDeleteEvent = (id) => {
-    setEvents(events.filter(event => event.id !== id));
-    setDeleteConfirm(null);
-    showSuccessMessage('Event deleted successfully!');
+  const handleDeleteEvent = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/delete-events/${id}`);
+      setEvents(events.filter(event => event.id !== id));
+      setDeleteConfirm(null);
+      showSuccessMessage('Event deleted successfully!');
+    } catch (error) {
+      setError('Failed to delete event: ' + (error.response?.data?.message || error.message));
+    }
   };
 
   const handleEditEvent = (event) => {
     setSelectedEvent(event);
     setNewEvent({
       name: event.name,
-      date: event.date,
+      date: new Date(event.date).toISOString().slice(0, 16),
       duration: event.duration,
       examiners: [...event.examiners],
       module: event.module || '',
@@ -109,6 +113,7 @@ const EventsPage = () => {
     switch (status) {
       case 'upcoming': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -117,7 +122,7 @@ const EventsPage = () => {
     if (!isOpen) return null;
 
     return (
-      <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
@@ -126,7 +131,6 @@ const EventsPage = () => {
             <button 
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
-              aria-label="Close modal"
             >
               <X className="h-6 w-6" />
             </button>
@@ -146,7 +150,6 @@ const EventsPage = () => {
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                 required
                 placeholder="Enter event name"
-                autoComplete="off"
               />
             </div>
 
@@ -163,7 +166,6 @@ const EventsPage = () => {
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                   required
-                  autoComplete="off"
                 />
               </div>
               <div>
@@ -180,7 +182,6 @@ const EventsPage = () => {
                   min="15"
                   step="15"
                   required
-                  autoComplete="off"
                 />
               </div>
             </div>
@@ -198,7 +199,6 @@ const EventsPage = () => {
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                 placeholder="e.g., CS4001"
                 required
-                autoComplete="off"
               />
             </div>
 
@@ -208,14 +208,14 @@ const EventsPage = () => {
                 <div className="space-y-2 max-h-48 overflow-y-auto rounded-lg border border-gray-200 p-3">
                   {examiners.map((examiner) => (
                     <label
-                      key={examiner.id}
-                      htmlFor={`examiner-${examiner.id}`}
+                      key={examiner.name}
+                      htmlFor={`examiner-${examiner.name}`}
                       className={`flex items-center p-3 rounded-lg ${
                         examiner.available ? 'bg-green-50 hover:bg-green-100' : 'bg-red-50 opacity-75'
                       }`}
                     >
                       <input
-                        id={`examiner-${examiner.id}`}
+                        id={`examiner-${examiner.name}`}
                         type="checkbox"
                         name="examiners"
                         value={examiner.name}
@@ -226,7 +226,6 @@ const EventsPage = () => {
                       />
                       <div className="ml-3 flex-1">
                         <p className="text-sm font-medium text-gray-900">{examiner.name}</p>
-                        <p className="text-xs text-gray-500">{examiner.expertise}</p>
                       </div>
                       {examiner.available ? (
                         <span className="text-green-600 text-xs font-medium">Available</span>
@@ -292,6 +291,9 @@ const EventsPage = () => {
       </div>
     );
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div>
@@ -382,14 +384,12 @@ const EventsPage = () => {
                           <button
                             onClick={() => handleEditEvent(event)}
                             className="text-indigo-600 hover:text-indigo-900"
-                            aria-label={`Edit ${event.name}`}
                           >
                             <Edit className="h-5 w-5" />
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(event)}
                             className="text-red-600 hover:text-red-900"
-                            aria-label={`Delete ${event.name}`}
                           >
                             <Trash2 className="h-5 w-5" />
                           </button>

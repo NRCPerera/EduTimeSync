@@ -1,54 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Search, Filter, CheckCircle2, XCircle as XCircle2, AlertCircle } from 'lucide-react';
 import LICHeader from '../../components/LICHeader';
+import axios from 'axios';
 
 const FilterAvailabilityPage = () => {
-  const [examiners] = useState([
-    {
-      id: '1',
-      name: 'Dr. Smith',
-      expertise: 'AI & Machine Learning',
-      availability: [
-        { day: '2024-03-25', slots: ['09:00', '10:00', '14:00', '15:00'] },
-        { day: '2024-03-26', slots: ['11:00', '13:00', '16:00'] },
-      ],
-      currentLoad: 2,
-      maxLoad: 5,
-    },
-    {
-      id: '2',
-      name: 'Dr. Johnson',
-      expertise: 'Software Engineering',
-      availability: [
-        { day: '2024-03-25', slots: ['10:00', '11:00', '15:00'] },
-        { day: '2024-03-26', slots: ['09:00', '14:00', '16:00'] },
-      ],
-      currentLoad: 4,
-      maxLoad: 5,
-    },
-    {
-      id: '3',
-      name: 'Dr. Williams',
-      expertise: 'Database Systems',
-      availability: [
-        { day: '2024-03-25', slots: ['09:00', '13:00', '14:00'] },
-        { day: '2024-03-26', slots: ['10:00', '11:00', '15:00'] },
-      ],
-      currentLoad: 1,
-      maxLoad: 5,
-    },
-    {
-      id: '4',
-      name: 'Dr. Brown',
-      expertise: 'Computer Networks',
-      availability: [
-        { day: '2024-03-25', slots: ['11:00', '13:00', '16:00'] },
-        { day: '2024-03-26', slots: ['09:00', '14:00', '15:00'] },
-      ],
-      currentLoad: 3,
-      maxLoad: 5,
-    },
-  ]);
+  const [examiners, setExaminers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [filters, setFilters] = useState({
     date: '',
@@ -56,6 +14,20 @@ const FilterAvailabilityPage = () => {
     expertise: '',
     searchQuery: '',
   });
+
+  useEffect(() => {
+    const fetchExaminers = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/get-examiners-availability');
+        setExaminers(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to load examiners: ' + (err.response?.data?.message || err.message));
+        setLoading(false);
+      }
+    };
+    fetchExaminers();
+  }, []);
 
   const expertiseAreas = [...new Set(examiners.map(examiner => examiner.expertise))];
   const allTimeSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
@@ -87,6 +59,9 @@ const FilterAvailabilityPage = () => {
     if (ratio < 0.8) return 'text-yellow-600';
     return 'text-red-600';
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div>
