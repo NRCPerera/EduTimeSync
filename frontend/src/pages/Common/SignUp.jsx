@@ -12,7 +12,7 @@ const SignUp = () => {
     nic: '',
     phoneNumber: '',
     address: '',
-    role: 'LIC' // Default role
+    role: 'Student' // Default role
 });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +30,7 @@ const SignUp = () => {
     setLoading(true);
 
     // Client-side validation
-    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword || !formData.nic || !formData.phoneNumber || !formData.address) {
+    if (!formData.username || !formData.email || !formData.password || !formData.nic || !formData.phoneNumber || !formData.address) {
       setLoading(false);
       return setErrorMessage('Please fill out all fields.');
     }

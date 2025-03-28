@@ -23,7 +23,7 @@ const StudentSchedule = () => {
     if (!token) {
       setError('Please log in to view your schedules');
       setLoading(false);
-      navigate('/login');
+      navigate('/sign-in'); // Updated to match your route
       return;
     }
 
@@ -39,7 +39,7 @@ const StudentSchedule = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(errorData.error || `HTTP error! status: ${response.data}`);
       }
 
       const data = await response.json();
@@ -81,6 +81,7 @@ const StudentSchedule = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Your Upcoming Examinations</h3>
+            <p className="text-sm text-gray-600">Schedules assigned to you for the selected month</p>
           </div>
           {loading ? (
             <div className="p-6 text-center text-gray-600">Loading your schedules...</div>
@@ -119,12 +120,17 @@ const StudentSchedule = () => {
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Users className="h-5 w-5 mr-2" />
-                      <span>Examiner: {exam.examinerId.email || 'Unknown'}</span>
+                      <span>Examiner: {exam.examinerId?.email || 'Unknown'}</span>
                     </div>
                     {exam.googleMeetLink && (
                       <div className="flex items-center text-gray-600 col-span-full">
                         <Video className="h-5 w-5 mr-2" />
-                        <a href={exam.googleMeetLink} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                        <a
+                          href={exam.googleMeetLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:underline"
+                        >
                           Google Meet Link
                         </a>
                       </div>

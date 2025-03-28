@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, MapPin, Users, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import LICHeader from '../../components/LICHeader'; // Corrected import name
+import ExaminerHeader from '../../components/ExaminerHeader';
 
-const RescheduleRequests = () => {
+const ExaminerRescheduleRequests = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,13 +20,13 @@ const RescheduleRequests = () => {
     setError(null);
 
     if (!token) {
-      setError('Please log in to view reschedule requests');
+      setError('Please log in to view your reschedule requests');
       navigate('/sign-in');
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/reschedule/all', {
+      const response = await fetch('http://localhost:5000/api/reschedule/examiner', {
         headers: {
           'x-auth-token': token,
         },
@@ -46,65 +46,15 @@ const RescheduleRequests = () => {
     }
   };
 
-  const handleApprove = async (requestId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/reschedule/${requestId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
-        body: JSON.stringify({ status: 'approved' }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to approve request');
-      }
-
-      setRequests(requests.map(request =>
-        request._id === requestId ? { ...request, status: 'approved' } : request
-      ));
-    } catch (err) {
-      setError(err.message);
-      console.error('Approve error:', err);
-    }
-  };
-
-  const handleReject = async (requestId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/reschedule/${requestId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token,
-        },
-        body: JSON.stringify({ status: 'rejected' }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to reject request');
-      }
-
-      setRequests(requests.map(request =>
-        request._id === requestId ? { ...request, status: 'rejected' } : request
-      ));
-    } catch (err) {
-      setError(err.message);
-      console.error('Reject error:', err);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <LICHeader />
+      <ExaminerHeader />
       
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Reschedule Requests</h1>
-            <p className="text-gray-600 mt-1">Review and manage examination reschedule requests</p>
+            <h1 className="text-2xl font-bold text-gray-900">My Reschedule Requests</h1>
+            <p className="text-gray-600 mt-1">View your submitted reschedule requests</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1">
@@ -121,7 +71,7 @@ const RescheduleRequests = () => {
         ) : error ? (
           <div className="text-center text-red-500">{error}</div>
         ) : requests.length === 0 ? (
-          <div className="text-center text-gray-600">No reschedule requests found</div>
+          <div className="text-center text-gray-600">No reschedule requests submitted</div>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="divide-y divide-gray-200">
@@ -130,37 +80,18 @@ const RescheduleRequests = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{request.scheduleId.module}</h3>
-                      <p className="text-sm text-gray-600">
-                        Requested by {request.examinerId.name} • {request.examinerId.email}
-                      </p>
+                      <p className="text-sm text-gray-600">Submitted on {new Date(request.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {request.status === 'pending' ? (
-                        <>
-                          <button
-                            onClick={() => handleApprove(request._id)}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 rounded-md hover:bg-green-100 transition-colors"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleReject(request._id)}
-                            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
-                          >
-                            <XCircle className="h-4 w-4" />
-                            Reject
-                          </button>
-                        </>
-                      ) : (
-                        <span className={`px-3 py-1 rounded-full text-sm ${
-                          request.status === 'approved' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                        </span>
-                      )}
+                    <div>
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        request.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : request.status === 'approved'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
                     </div>
                   </div>
 
@@ -175,7 +106,7 @@ const RescheduleRequests = () => {
                           </div>
                           <div className="flex items-center text-gray-600">
                             <Clock className="h-4 w-4 mr-1" />
-                            <span className="text-sm">{request.scheduleId.scheduledTime.startTime}</span>
+                            <span className="text-sm">{request.scheduleId.scheduledTime.startTime} - {request.scheduleId.scheduledTime.endTime}</span>
                           </div>
                         </div>
                       </div>
@@ -188,20 +119,17 @@ const RescheduleRequests = () => {
                           </div>
                           <div className="flex items-center text-gray-600">
                             <Clock className="h-4 w-4 mr-1" />
-                            <span className="text-sm">{request.proposedTime.startTime}</span>
+                            <span className="text-sm">{request.proposedTime.startTime} - {request.proposedTime.endTime}</span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="flex items-center text-gray-600">
                       <MapPin className="h-4 w-4 mr-2" />
                       <span className="text-sm">{request.scheduleId.googleMeetLink ? 'Virtual' : 'In-person'}</span>
-                    </div>
-                    <div className="text-gray-600 text-sm">
-                      Submitted {new Date(request.createdAt).toLocaleDateString()}
                     </div>
                   </div>
 
@@ -219,4 +147,4 @@ const RescheduleRequests = () => {
   );
 };
 
-export default RescheduleRequests;
+export default ExaminerRescheduleRequests;

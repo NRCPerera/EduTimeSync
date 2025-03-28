@@ -45,71 +45,75 @@ exports.signIn = async (req, res) => {
 
 // Sign Up Controller
 exports.signUp = async (req, res) => {
-  const { username, email, password, nic, phoneNumber, address } = req.body;
+    console.log('Sign Up Request:', req.body);
 
-  if (!username || !email || !password || !nic || !phoneNumber || !address) {
-    return res.status(400).json({ message: 'Please fill out all required fields' });
-  }
+    const { name, email, password, nic, phoneNumber, address, role } = req.body;
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ message: 'Please enter a valid email address' });
-  }
-
-  const phoneNumberRegex = /^\d{10}$/;
-  if (!phoneNumberRegex.test(phoneNumber)) {
-    return res.status(400).json({ message: 'Please enter a valid 10-digit phone number' });
-  }
-
-  const nicRegex = /^[0-9]{9}[vVxX]$/;
-  if (!nicRegex.test(nic)) {
-    return res.status(400).json({ message: 'Please enter a valid NIC (e.g., 123456789V)' });
-  }
-
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already exists' });
+    console.log('Sign Up Request:', req.body);
+  
+    // Require only username, email, and password; others optional
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Username, email, and password are required' });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-      name: username,
-      email,
-      password: hashedPassword,
-      role: 'Student',
-      nic,
-      phoneNumber,
-      address,
-    });
-
-    await newUser.save();
-
-    const token = jwt.sign(
-      { id: newUser._id, role: newUser.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    res.status(201).json({
-      message: 'Sign up successful',
-      token,
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        nic: newUser.nic,
-        phoneNumber: newUser.phoneNumber,
-        address: newUser.address,
-      },
-    });
-  } catch (error) {
-    console.error('Sign up error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+  
+    if (phoneNumber && !/^\d{10}$/.test(phoneNumber)) {
+      return res.status(400).json({ message: 'Please enter a valid 10-digit phone number' });
+    }
+  
+    // NIC validation optional
+    // if (nic && !/^[0-9]{9}[vVxX]$/.test(nic)) {
+    //   return res.status(400).json({ message: 'Please enter a valid NIC (e.g., 123456789V)' });
+    // }
+  
+    try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      const newUser = new User({
+        name: name,
+        email,
+        password: hashedPassword,
+        role: role || 'Student', // Allow role override from request
+        nic: nic || '',          // Default to empty string if not provided
+        phoneNumber: phoneNumber || '',
+        address: address || '',
+      });
+  
+      await newUser.save();
+  
+      const token = jwt.sign(
+        { id: newUser._id, role: newUser.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
+  
+      res.status(201).json({
+        message: 'Sign up successful',
+        token,
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          nic: newUser.nic,
+          phoneNumber: newUser.phoneNumber,
+          address: newUser.address,
+        },
+      });
+    } catch (error) {
+      console.error('Sign up error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
 
 // Get Current User Controller
 exports.getCurrentUser = async (req, res) => {
@@ -136,3 +140,75 @@ exports.getCurrentUser = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+exports.getLicsAndExaminers = async (req, res) => {
+    try {
+      if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Access denied. Admin only.' });
+      }
+  
+      const users = await User.find({ role: { $in: ['LIC', 'Examiner'] } }).select('-password');
+      res.status(200).json({
+        success: true,
+        count: users.length,
+        data: users,
+      });
+    } catch (error) {
+      console.error('Get LICs/Examiners error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  
+  // Update User (Admin only)
+  exports.updateUser = async (req, res) => {
+    try {
+      if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Access denied. Admin only.' });
+      }
+  
+      const { name, email, role, nic, phoneNumber, address } = req.body;
+      const user = await User.findById(req.params.id);
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      user.name = name || user.name;
+      user.email = email || user.email;
+      user.role = role || user.role;
+      user.nic = nic || user.nic;
+      user.phoneNumber = phoneNumber || user.phoneNumber;
+      user.address = address || user.address;
+  
+      await user.save();
+  
+      res.status(200).json({
+        success: true,
+        data: user,
+      });
+    } catch (error) {
+      console.error('Update user error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  
+  // Delete User (Admin only)
+  exports.deleteUser = async (req, res) => {
+    try {
+      if (req.user.role !== 'Admin') {
+        return res.status(403).json({ message: 'Access denied. Admin only.' });
+      }
+  
+      const user = await User.findByIdAndDelete(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: 'User deleted successfully',
+      });
+    } catch (error) {
+      console.error('Delete user error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };

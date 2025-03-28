@@ -16,22 +16,37 @@ exports.validateSchedule = [
 exports.getExaminerSchedules = async (req, res, next) => {
   try {
     const { month, year } = req.query;
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
     let query = {
-      examinerId: req.user.id, // Filter by logged-in examiner
+      examinerId: req.user.id, // Changed to req.user.id for consistency
     };
 
     if (month && year) {
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 0);
+      const monthNum = parseInt(month, 10);
+      const yearNum = parseInt(year, 10);
+      if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
+        return res.status(400).json({ success: false, error: 'Invalid month or year' });
+      }
+      const startDate = new Date(yearNum, monthNum - 1, 1);
+      const endDate = new Date(yearNum, monthNum, 0);
+      // console.log("Start Date:", startDate.toISOString().split('T')[0]);
+      // console.log("End Date:", endDate.toISOString().split('T')[0]);
       query['scheduledTime.date'] = {
         $gte: startDate.toISOString().split('T')[0],
         $lte: endDate.toISOString().split('T')[0],
       };
     }
 
+    //
+
     const schedules = await Schedule.find(query)
-      .populate('studentId', 'email')
+      .populate('studentId', 'email') // Changed to email for consistency with frontend
       .populate('examinerId', 'email');
+
+    //console.log("Fetched Schedules:", schedules);
 
     res.status(200).json({
       success: true,
@@ -39,7 +54,8 @@ exports.getExaminerSchedules = async (req, res, next) => {
       data: schedules,
     });
   } catch (error) {
-    next(error);
+    //console.error("Error Fetching Examiner Schedules:", error);
+    res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
 
@@ -47,22 +63,38 @@ exports.getExaminerSchedules = async (req, res, next) => {
 exports.getStudentSchedules = async (req, res, next) => {
   try {
     const { month, year } = req.query;
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+
+    // console.log("Logged-in Student ID:", req.user.id);
+    // console.log("Query params:", { month, year });
+
     let query = {
-      studentId: req.user.id, // Filter by logged-in student
+      studentId: req.user.id,
     };
 
     if (month && year) {
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 0);
+      const monthNum = parseInt(month, 10);
+      const yearNum = parseInt(year, 10);
+      if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
+        return res.status(400).json({ success: false, error: 'Invalid month or year' });
+      }
+      const startDate = new Date(yearNum, monthNum - 1, 1);
+      const endDate = new Date(yearNum, monthNum, 0);
       query['scheduledTime.date'] = {
         $gte: startDate.toISOString().split('T')[0],
         $lte: endDate.toISOString().split('T')[0],
       };
     }
 
+    //console.log("MongoDB Query:", query);
+
     const schedules = await Schedule.find(query)
       .populate('studentId', 'email')
       .populate('examinerId', 'email');
+
+    //console.log("Fetched Schedules:", schedules);
 
     res.status(200).json({
       success: true,
@@ -70,7 +102,8 @@ exports.getStudentSchedules = async (req, res, next) => {
       data: schedules,
     });
   } catch (error) {
-    next(error);
+    //console.error("Error Fetching Student Schedules:", error);
+    res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
 

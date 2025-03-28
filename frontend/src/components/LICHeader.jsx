@@ -20,21 +20,29 @@ export default function LICHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="hover:text-emerald-200 flex items-center gap-1">
+            <a href="/lic-dashboard" className="hover:text-emerald-200 flex items-center gap-1">
               <Home className="h-4 w-4" />
               Home
             </a>
-            <a href="#" className="hover:text-emerald-200 flex items-center gap-1">
+            <a href="/lic-dashboard" className="hover:text-emerald-200 flex items-center gap-1">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </a>
-            <a href="#" className="hover:text-emerald-200 flex items-center gap-1">
+            <a href="/events-page" className="hover:text-emerald-200 flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               Create Events
             </a>
-            <a href="#" className="hover:text-emerald-200 flex items-center gap-1">
+            <a href="/filter-availability" className="hover:text-emerald-200 flex items-center gap-1">
               <UserPlus className="h-4 w-4" />
               Assign Examiners
+            </a>
+            <a href="/reschedule-requests" className="hover:text-emerald-200 flex items-center gap-1">
+              <UserPlus className="h-4 w-4" />
+              Reschedule Requests
+            </a>
+            <a href="/notify-page" className="hover:text-emerald-200 flex items-center gap-1">
+              <UserPlus className="h-4 w-4" />
+              Notify Examiners
             </a>
           </nav>
 
@@ -80,10 +88,10 @@ export default function LICHeader() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-4">
-            <a href="#" className="block py-2 hover:text-emerald-200">Home</a>
-            <a href="#" className="block py-2 hover:text-emerald-200">Dashboard</a>
-            <a href="#" className="block py-2 hover:text-emerald-200">Create Events</a>
-            <a href="#" className="block py-2 hover:text-emerald-200">Assign Examiners</a>
+            <a href="/lic-dashboard" className="block py-2 hover:text-emerald-200">Home</a>
+            <a href="/lic-dashboard" className="block py-2 hover:text-emerald-200">Dashboard</a>
+            <a href="/events-page" className="block py-2 hover:text-emerald-200">Create Events</a>
+            <a href="/filter-availability" className="block py-2 hover:text-emerald-200">Assign Examiners</a>
           </div>
         )}
       </div>
