@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 import Home from './pages/Common/Home';
-import EventsPage from './pages/LIC/Evetspage';
 import NotifyPage from './pages/LIC/NotifyPage';
 import Login from './pages/Common/SignIn';
 import SignUp from './pages/Common/SignUp';
@@ -25,6 +24,7 @@ const ProtectedRoute = ({ element, allowedRoles }) => {
 
   return allowedRoles.includes(userRole) ? element : <Navigate to="/" />;
 };
+
 
 function App() {
   return (
