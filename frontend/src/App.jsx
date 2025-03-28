@@ -15,6 +15,7 @@ import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
 import EventsPage from './pages/LIC/Evetspage';
 import ExaminerAvailability from './pages/Examiner/ExaminerAvailability';
 import AssignEvents from './pages/Examiner/AssignEvents';
+import StdEvalutation from './pages/Examiner/StdEvalutation';
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -67,11 +68,11 @@ function App() {
           element={<ProtectedRoute element={<FilterAvailabilityPage />} allowedRoles={['LIC']} />}
         />
         <Route
-          path="/events-page" 
+          path="/notify-page" 
           element={<ProtectedRoute element={<NotifyPage />} allowedRoles={['LIC']} />} 
         />
         <Route
-          path="/notify-page"
+          path="/event-page"
           element={<ProtectedRoute element={<EventsPage />} allowedRoles={['LIC']} />}
         />
         <Route
@@ -81,6 +82,10 @@ function App() {
         <Route
           path='/assign-events'
           element={<ProtectedRoute element={<AssignEvents />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+        path='/std-evalutation-marks'
+        element={<ProtectedRoute element={<StdEvalutation />} allowedRoles={['Examiner']} />}
         />
       </Routes>
     </Router>

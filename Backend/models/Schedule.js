@@ -7,7 +7,7 @@ const TimeSlotSchema = new mongoose.Schema({
 
 // Sub-schema for scheduledTime
 const ScheduledTimeSchema = new mongoose.Schema({
-  date: { type: String, required: true },
+  date: { type: Date, required: true },
   slots: [TimeSlotSchema],  
 });
 
