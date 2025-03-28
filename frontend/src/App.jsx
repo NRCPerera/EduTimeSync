@@ -112,6 +112,10 @@ function App() {
           path="/admin-dashboard"
           element={<ProtectedRoute element={<AdminDashboard />} allowedRoles={['Admin']} />}
         />
+        <Route
+          path="/lic-dashboard"
+          element={<ProtectedRoute element={<LICDashboard />} allowedRoles={['LIC']} />}
+        />
 
       </Routes>
     </Router>
