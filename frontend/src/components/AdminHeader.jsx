@@ -28,7 +28,7 @@ export default function AdminHeader() {
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </a>
-            <a href="#" className="hover:text-indigo-200 flex items-center gap-1">
+            <a href="/module-list" className="hover:text-indigo-200 flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
               Manage Modules
             </a>
@@ -82,7 +82,7 @@ export default function AdminHeader() {
           <div className="md:hidden py-4">
             <a href="/admin-dashboard" className="block py-2 hover:text-indigo-200">Home</a>
             <a href="/admin-dashboard" className="block py-2 hover:text-indigo-200">Dashboard</a>
-            <a href="#" className="block py-2 hover:text-indigo-200">Manage Modules</a>
+            <a href="/module-list" className="block py-2 hover:text-indigo-200">Manage Modules</a>
             <a href="/user-management" className="block py-2 hover:text-indigo-200">Assign LICs</a>
           </div>
         )}

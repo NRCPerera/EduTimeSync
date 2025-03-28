@@ -14,6 +14,9 @@ import RescheduleRequests from './pages/LIC/RescheduleRequests';
 import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
 import UserManagement from './pages/Admin/UserManagement';
 import ExaminerRescheduleRequests from './pages/Examiner/ExaminerRescheduleRequests';
+import CreateModule from './pages/Admin/CreateModule';
+import ModuleList from './pages/Admin/ModuleList';
+import EventsPage from './pages/LIC/Evetspage';
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
@@ -80,6 +83,14 @@ function App() {
         <Route
           path="/examiner-reschedule-requests"
           element={<ProtectedRoute element={<ExaminerRescheduleRequests />} allowedRoles={['Examiner']} />}
+        />
+        <Route
+          path="/create-module"
+          element={<ProtectedRoute element={<CreateModule />} allowedRoles={['Admin']} />}
+        />
+        <Route
+          path="/module-list"
+          element={<ProtectedRoute element={<ModuleList />} allowedRoles={['Admin']} />}
         />
       </Routes>
     </Router>

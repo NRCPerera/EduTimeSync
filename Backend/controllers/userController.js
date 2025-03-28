@@ -212,3 +212,13 @@ exports.getLicsAndExaminers = async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   };
+
+  exports.getStudentRegistrations = async (req, res) => {
+    try {
+      const registrations = await ModuleRegistration.find({ studentId: req.user.id })
+        .populate('studentId', 'name email');
+      res.status(200).json({ success: true, data: registrations });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  };
