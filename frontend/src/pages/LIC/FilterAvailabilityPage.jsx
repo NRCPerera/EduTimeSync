@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Search, Filter, CheckCircle2, XCircle as XCircle2, AlertCircle } from 'lucide-react';
 import LICHeader from '../../components/LICHeader';
 
+
 const FilterAvailabilityPage = () => {
   const [examiners, setExaminers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,11 +18,16 @@ const FilterAvailabilityPage = () => {
   useEffect(() => {
     const fetchExaminers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/get-examiners-availability');
-        setExaminers(response.data);
+        const response = await fetch('http://localhost:5000/api/get-examiners-availability');
+        if (!response.ok) {
+          const errorData = await response.json(); // Attempt to parse error message from response
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json(); // Parse the successful response
+        setExaminers(data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load examiners: ' + (err.response?.data?.message || err.message));
+        setError('Failed to load examiners: ' + (err.message || 'Unknown error'));
         setLoading(false);
       }
     };

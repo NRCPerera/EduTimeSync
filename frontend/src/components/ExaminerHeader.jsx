@@ -28,11 +28,11 @@ export default function ExaminerHeader() {
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </a>
-            <a href="#" className="hover:text-amber-200 flex items-center gap-1">
+            <a href="/examiner-availability" className="hover:text-amber-200 flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               Set Availability
             </a>
-            <a href="#" className="hover:text-amber-200 flex items-center gap-1">
+            <a href="/std-evalutation" className="hover:text-amber-200 flex items-center gap-1">
               <GraduationCap className="h-4 w-4" />
               Grade Students
             </a>
