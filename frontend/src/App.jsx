@@ -108,6 +108,11 @@ function App() {
           path="/std-evalutation"
           element={<ProtectedRoute element={<StdEvalutation />} allowedRoles={['Examiner']} />}
         />
+        <Route
+          path="/admin-dashboard"
+          element={<ProtectedRoute element={<AdminDashboard />} allowedRoles={['Admin']} />}
+        />
+
       </Routes>
     </Router>
   );
