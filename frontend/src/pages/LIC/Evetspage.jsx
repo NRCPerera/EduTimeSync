@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Plus, Edit, Trash2, Check, X, AlertCircle } from 'lucide-react';
 import LICHeader from '../../components/LICHeader';
-import axios from 'axios';
 
 const EventsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

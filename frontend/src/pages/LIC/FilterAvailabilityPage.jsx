@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Search, Filter, CheckCircle2, XCircle as XCircle2, AlertCircle } from 'lucide-react';
 import LICHeader from '../../components/LICHeader';
-import axios from 'axios';
 
 const FilterAvailabilityPage = () => {
   const [examiners, setExaminers] = useState([]);

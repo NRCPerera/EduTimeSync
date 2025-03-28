@@ -20,7 +20,7 @@ import UserManagement from './pages/Admin/UserManagement';
 import ExaminerRescheduleRequests from './pages/Examiner/ExaminerRescheduleRequests';
 import CreateModule from './pages/Admin/CreateModule';
 import ModuleList from './pages/Admin/ModuleList';
-import EventsPage from './pages/LIC/Evetspage';
+
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
   const token = localStorage.getItem('token');
