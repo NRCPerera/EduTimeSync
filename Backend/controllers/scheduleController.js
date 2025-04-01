@@ -1,20 +1,8 @@
-// backend/controllers/scheduleController.js
 const Schedule = require('../models/Schedule');
-const { check, validationResult } = require('express-validator');
 const ModuleRegistration = require('../models/ModuleRegistration');
 const Event = require('../models/Event');
 const User = require('../models/user');
 const axios = require('axios');
-
-// exports.validateSchedule = [
-//   check('studentId', 'Student ID is required').not().isEmpty(),
-//   check('examinerId', 'Examiner ID is required').not().isEmpty(),
-//   check('module', 'Module is required').not().isEmpty(),
-//   check('startTime', 'Start time is required').not().isEmpty(),
-//   check('endTime', 'End time is required').not().isEmpty(),
-//   check('googleMeetLink', 'Google Meet link must be a valid URL').optional().isURL(),
-//   check('eventId', 'Event ID is required').not().isEmpty(),
-// ];
 
 exports.getExaminerSchedules = async (req, res) => {
   try {
@@ -37,12 +25,20 @@ exports.getExaminerSchedules = async (req, res) => {
 
     const schedules = await Schedule.find(query)
       .populate('studentId', 'email')
-      .populate('examinerId', 'email');
+      .populate('examinerId', 'email')
+      .lean(); // Use lean() for plain JS objects
+
+    // Format dates to ISO strings
+    const formattedSchedules = schedules.map(schedule => ({
+      ...schedule,
+      startTime: schedule.startTime.toISOString(),
+      endTime: schedule.endTime.toISOString(),
+    }));
 
     res.status(200).json({
       success: true,
-      count: schedules.length,
-      data: schedules,
+      count: formattedSchedules.length,
+      data: formattedSchedules,
     });
   } catch (error) {
     console.error('Error fetching examiner schedules:', error);
@@ -71,12 +67,19 @@ exports.getStudentSchedules = async (req, res) => {
 
     const schedules = await Schedule.find(query)
       .populate('studentId', 'email')
-      .populate('examinerId', 'email');
+      .populate('examinerId', 'email')
+      .lean();
+
+    const formattedSchedules = schedules.map(schedule => ({
+      ...schedule,
+      startTime: schedule.startTime.toISOString(),
+      endTime: schedule.endTime.toISOString(),
+    }));
 
     res.status(200).json({
       success: true,
-      count: schedules.length,
-      data: schedules,
+      count: formattedSchedules.length,
+      data: formattedSchedules,
     });
   } catch (error) {
     console.error('Error fetching student schedules:', error);
@@ -92,20 +95,20 @@ exports.scheduleEvent = async (req, res) => {
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
-    console.log('Event:', event); // Debug event details
+    console.log('Event:', event);
     console.log('Module to find:', event.module);
     if (event.scheduleIds.length > 0) {
       return res.status(400).json({ message: 'Event already scheduled' });
     }
 
     const registrations = await ModuleRegistration.find({ moduleCode: event.module });
-    console.log('Registrations:', registrations.length); // Debug registrations
+    console.log('Registrations:', registrations.length);
     if (registrations.length < 1) {
       return res.status(400).json({ message: 'No students registered for this module' });
     }
 
-    const examinerIds = (await User.find({ role: 'Examiner' })).map(e => e._id.toString());
-    console.log('Examiner IDs:', examinerIds); // Debug examiner IDs
+    const examinerIds = event.examinerIds.map(id => id.toString()); // Use event-specific examinerIds
+    console.log('Examiner IDs:', examinerIds);
 
     const scheduleResponse = await axios.post('http://localhost:5001/schedule', {
       startDate: event.startDate.toISOString(),
@@ -144,20 +147,25 @@ exports.getScheduleById = async (req, res) => {
   try {
     const schedule = await Schedule.findById(req.params.id)
       .populate('studentId', 'email')
-      .populate('examinerId', 'email');
+      .populate('examinerId', 'email')
+      .lean();
     if (!schedule) {
       return res.status(404).json({ success: false, error: 'Schedule not found' });
     }
-    if (schedule.studentId.toString() !== req.user.id && schedule.examinerId.toString() !== req.user.id) {
+    if (schedule.studentId._id.toString() !== req.user.id && schedule.examinerId._id.toString() !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Not authorized to view this schedule' });
     }
+    const formattedSchedule = {
+      ...schedule,
+      startTime: schedule.startTime.toISOString(),
+      endTime: schedule.endTime.toISOString(),
+    };
     res.status(200).json({
       success: true,
-      data: schedule,
+      data: formattedSchedule,
     });
   } catch (error) {
     console.error('Error fetching schedule by ID:', error);
     res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
-

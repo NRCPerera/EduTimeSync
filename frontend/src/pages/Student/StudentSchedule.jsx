@@ -23,7 +23,7 @@ const StudentSchedule = () => {
     if (!token) {
       setError('Please log in to view your schedules');
       setLoading(false);
-      navigate('/sign-in'); // Updated to match your route
+      navigate('/sign-in');
       return;
     }
 
@@ -39,7 +39,7 @@ const StudentSchedule = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.data}`);
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -58,6 +58,16 @@ const StudentSchedule = () => {
 
   const handleNextMonth = () => {
     setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1));
+  };
+
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('default', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const formatTime = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   return (
@@ -106,12 +116,12 @@ const StudentSchedule = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="flex items-center text-gray-600">
                       <CalendarIcon className="h-5 w-5 mr-2" />
-                      <span>{exam.scheduledTime.date}</span>
+                      <span>{formatDate(exam.startTime)}</span>
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Clock className="h-5 w-5 mr-2" />
                       <span>
-                        {exam.scheduledTime.startTime} - {exam.scheduledTime.endTime}
+                        {formatTime(exam.startTime)} - {formatTime(exam.endTime)}
                       </span>
                     </div>
                     <div className="flex items-center text-gray-600">
