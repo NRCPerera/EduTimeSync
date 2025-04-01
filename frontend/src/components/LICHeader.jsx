@@ -28,7 +28,7 @@ export default function LICHeader() {
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </a>
-            <a href="/events-page" className="hover:text-emerald-200 flex items-center gap-1">
+            <a href="/event-page" className="hover:text-emerald-200 flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               Create Events
             </a>

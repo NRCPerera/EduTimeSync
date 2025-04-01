@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 
 // Helper function to convert 12-hour time (e.g., "11:00 AM") to 24-hour format (e.g., "11:00" or "23:00")
 const convertTo24Hour = (time12h) => {
+  if (!time12h) return ''; // Return an empty string if the input is undefined
+
   const [time, period] = time12h.split(' ');
   let [hours, minutes] = time.split(':');
   hours = parseInt(hours, 10);

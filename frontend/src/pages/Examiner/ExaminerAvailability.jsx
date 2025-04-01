@@ -2,8 +2,7 @@ import { useState } from 'react';
 
 const ExaminerAvailability = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    module: '',
+    module: '', // Removed 'name' as backend doesn't use it
     date: '',
     availableSlots: [],
   });
@@ -42,31 +41,39 @@ const ExaminerAvailability = () => {
     setError(null);
     setSuccess(null);
 
-    if (!formData.name || !formData.module || !formData.date || formData.availableSlots.length === 0) {
+    if (!formData.module || !formData.date || formData.availableSlots.length === 0) {
       setError('Please fill out all fields and select at least one time slot');
       return;
     }
 
     try {
+      const token = localStorage.getItem('token'); // Retrieve token
+      if (!token) {
+        throw new Error('No authentication token found. Please log in.');
+      }
+
       const response = await fetch('http://localhost:5000/api/examiner/availability', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-auth-token': token, // Add token to headers
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          module: formData.module,
+          date: formData.date,
+          availableSlots: formData.availableSlots,
+        }), // Send only fields expected by backend
       });
 
-      // Check if response is OK before parsing
       if (!response.ok) {
-        const text = await response.text(); // Get raw response
-        throw new Error(`Server error: ${response.status} - ${text}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Server error: ${response.status}`);
       }
 
       const data = await response.json();
       setSuccess('Availability submitted successfully!');
       console.log('Submitted availability:', data);
       setFormData({
-        name: '',
         module: '',
         date: '',
         availableSlots: [],
@@ -99,22 +106,6 @@ const ExaminerAvailability = () => {
             {success && <div className="p-3 bg-green-100 text-green-700 rounded-lg">{success}</div>}
 
             <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-gray-700">
-                  Examiner Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  required
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3 border transition duration-150 ease-in-out"
-                  placeholder="Enter your full name"
-                />
-              </div>
-
               <div>
                 <label htmlFor="module" className="block text-sm font-semibold text-gray-700">
                   Module

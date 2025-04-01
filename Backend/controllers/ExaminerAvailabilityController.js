@@ -1,36 +1,37 @@
+// backend/controllers/examinerAvailabilityController.js
 const ExaminerAvailability = require('../models/ExaminerAvailability');
 
 const submitExaminerAvailability = async (req, res) => {
-  const { name, module, date, availableSlots } = req.body; // Changed examinerName to name
+  const { module, date, availableSlots } = req.body;
 
-  // Basic input validation (Mongoose schema validation will also kick in)
-  if (!name || !module || !date || !availableSlots || !Array.isArray(availableSlots) || availableSlots.length === 0) {
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+
+  if (!module || !date || !availableSlots || !Array.isArray(availableSlots) || availableSlots.length === 0) {
     return res.status(400).json({ message: 'All fields are required, and at least one time slot must be selected' });
   }
 
   try {
-    // Parse date in MM/DD/YYYY format to ensure correct Date object
     const parsedDate = new Date(date);
     if (isNaN(parsedDate.getTime())) {
       return res.status(400).json({ message: 'Invalid date format. Use MM/DD/YYYY' });
     }
 
-    // Create new availability document
-    const availability = new ExaminerAvailability({ // Renamed variable to avoid conflict
-      examinerName: name, // Map 'name' from request to 'examinerName' in schema
+    const availability = new ExaminerAvailability({
+      examinerId: req.user.id,
       module,
       date: parsedDate,
       availableSlots,
     });
 
-    // Save to database; pre('save') middleware will check if date is in future
     await availability.save();
 
     res.status(201).json({
       message: 'Availability submitted successfully',
       availability: {
         id: availability._id,
-        examinerName: availability.examinerName,
+        examinerId: availability.examinerId,
         module: availability.module,
         date: availability.date,
         availableSlots: availability.availableSlots,

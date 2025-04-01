@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LICHeader from '../../components/LICHeader';
 
 const AssignEvents = () => {
   const [assignedEvents, setAssignedEvents] = useState([]);
@@ -56,7 +57,10 @@ const AssignEvents = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div>
+      <LICHeader />
+    
+    <div className="min-h-screen min-w-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8">
@@ -118,6 +122,7 @@ const AssignEvents = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

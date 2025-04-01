@@ -1,10 +1,11 @@
+// backend/models/ExaminerAvailability.js
 const mongoose = require('mongoose');
 
 const ExaminerAvailabilitySchema = new mongoose.Schema({
-  examinerName: {
-    type: String,
-    required: [true, 'Please add examiner name'],
-    trim: true,
+  examinerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Please add examiner ID'],
   },
   module: {
     type: String,
@@ -16,7 +17,7 @@ const ExaminerAvailabilitySchema = new mongoose.Schema({
     required: [true, 'Please add date'],
   },
   availableSlots: {
-    type: [String],
+    type: [String], // e.g., ["9:00 AM-10:00 AM"]
     required: [true, 'Please select at least one time slot'],
     validate: {
       validator: function (v) {
@@ -40,8 +41,3 @@ ExaminerAvailabilitySchema.pre('save', function (next) {
 });
 
 module.exports = mongoose.model('ExaminerAvailability', ExaminerAvailabilitySchema);
-
-
-
-
-

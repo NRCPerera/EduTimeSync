@@ -45,11 +45,8 @@ exports.signIn = async (req, res) => {
 
 // Sign Up Controller
 exports.signUp = async (req, res) => {
-    console.log('Sign Up Request:', req.body);
 
     const { name, email, password, nic, phoneNumber, address, role } = req.body;
-
-    console.log('Sign Up Request:', req.body);
   
     // Require only username, email, and password; others optional
     if (!name || !email || !password) {

@@ -34,7 +34,7 @@ exports.createRescheduleRequest = async (req, res) => {
       return res.status(400).json({ success: false, error: 'A reschedule request already exists for this schedule' });
     }
 
-    const request = await rescheduleRequest.create({
+    const request = await RescheduleRequest.create({
       scheduleId,
       examinerId: req.user.id,
       proposedTime,

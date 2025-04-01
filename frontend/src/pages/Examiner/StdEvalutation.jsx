@@ -11,18 +11,26 @@ const StdEvaluation = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/evaluations/students?examinerId=${examinerId}`);
-        console.log('Fetched students:', response.data); // Debug response
-        setStudents(response.data);
-        setLoading(false);
+        const response = await fetch(`http://localhost:5000/api/evaluations/students?examinerId=${examinerId}`);
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
+        const data = await response.json();
+        console.log('Fetched students:', data); // Debug response
+        setStudents(data);
       } catch (error) {
-        console.error('Error fetching students:', error.response?.data || error.message);
-        setError('Failed to fetch students: ' + (error.response?.data?.message || error.message));
+        console.error('Error fetching students:', error.message);
+        setError('Failed to fetch students: ' + error.message);
+      } finally {
         setLoading(false);
       }
     };
+  
     fetchStudents();
   }, []);
+  
 
   const handleGradeChange = (id, value) => {
     setStudents(students.map(student =>
@@ -39,25 +47,36 @@ const StdEvaluation = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        'http://localhost:5000/api/evaluations/submit',
-        {
+      const response = await fetch('http://localhost:5000/api/evaluations/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           examinerId,
           evaluations: students.filter(student => student.grade && student.presentation && !student.evaluated),
-        }
-      );
-      console.log('Submitted evaluations:', response.data);
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log('Submitted evaluations:', data);
       alert('Evaluations submitted successfully!');
+  
       setStudents(students.map(student =>
-        response.data.evaluations.some(evaluation => evaluation.studentId === student.id)
+        data.evaluations.some(evaluation => evaluation.studentId === student.id)
           ? { ...student, evaluated: true }
           : student
       ));
     } catch (error) {
-      console.error('Error submitting evaluations:', error.response?.data || error.message);
-      setError('Failed to submit evaluations: ' + (error.response?.data?.message || error.message));
+      console.error('Error submitting evaluations:', error.message);
+      setError('Failed to submit evaluations: ' + error.message);
     }
   };
+  
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">{error}</div>;

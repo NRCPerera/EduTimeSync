@@ -67,7 +67,6 @@ const ExaminerSchedule = () => {
     setIsRescheduleModalOpen(true);
   };
 
-  // In ExaminerSchedule.jsx
   const handleSubmitReschedule = async (formData) => {
     try {
       const response = await fetch('http://localhost:5000/api/reschedule/add', {
@@ -80,24 +79,34 @@ const ExaminerSchedule = () => {
           scheduleId: formData.examId,
           proposedTime: {
             date: formData.newDate,
-            startTime: formData.newStartTime, // Expects "HH:mm"
-            endTime: formData.newEndTime,     // Expects "HH:mm"
+            startTime: formData.newStartTime,
+            endTime: formData.newEndTime,
           },
           reason: formData.reason,
         }),
       });
-  
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit reschedule request');
       }
-  
+
       setIsRescheduleModalOpen(false);
       fetchSchedules();
     } catch (err) {
       setError(err.message);
       console.error('Reschedule error:', err);
     }
+  };
+
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('default', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const formatTime = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   return (
@@ -154,12 +163,12 @@ const ExaminerSchedule = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="flex items-center text-gray-600">
                       <CalendarIcon className="h-5 w-5 mr-2" />
-                      <span>{exam.scheduledTime.date}</span>
+                      <span>{formatDate(exam.startTime)}</span>
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Clock className="h-5 w-5 mr-2" />
                       <span>
-                        {exam.scheduledTime.startTime} - {exam.scheduledTime.endTime}
+                        {formatTime(exam.startTime)} - {formatTime(exam.endTime)}
                       </span>
                     </div>
                     <div className="flex items-center text-gray-600">
@@ -168,7 +177,7 @@ const ExaminerSchedule = () => {
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Users className="h-5 w-5 mr-2" />
-                      <span>Student: {exam.studentId?.email || 'Unknown'}</span> {/* Updated to show student email */}
+                      <span>Student: {exam.studentId?.email || 'Unknown'}</span>
                     </div>
                     {exam.googleMeetLink && (
                       <div className="flex items-center text-gray-600 col-span-full">
