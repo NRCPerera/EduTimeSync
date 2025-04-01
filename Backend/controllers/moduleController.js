@@ -1,3 +1,4 @@
+// backend/controllers/moduleController.js
 const Module = require('../models/Module');
 const User = require('../models/user');
 const ModuleRegistration = require('../models/ModuleRegistration');
@@ -6,23 +7,19 @@ exports.registerModule = async (req, res) => {
   try {
     const { moduleCode, password } = req.body;
 
-    // Check if user is a student
-    if (req.user.role !== 'student') {
+    if (req.user.role !== 'Student') {
       return res.status(403).json({ success: false, error: 'Only students can register for modules' });
     }
 
-    // Find the module by code
     const module = await Module.findOne({ code: moduleCode });
     if (!module) {
       return res.status(404).json({ success: false, error: 'Module not found' });
     }
 
-    // Validate password
     if (module.password !== password) {
       return res.status(401).json({ success: false, error: 'Incorrect module password' });
     }
 
-    // Check if student is already registered
     const existingRegistration = await ModuleRegistration.findOne({
       studentId: req.user.id,
       moduleCode: moduleCode,
@@ -31,7 +28,6 @@ exports.registerModule = async (req, res) => {
       return res.status(400).json({ success: false, error: 'You are already registered for this module' });
     }
 
-    // Create new registration
     const registration = await ModuleRegistration.create({
       studentId: req.user.id,
       moduleCode: moduleCode,
@@ -50,7 +46,6 @@ exports.registerModule = async (req, res) => {
   }
 };
 
-// Optional: Create a module (for LIC use)
 exports.createModule = async (req, res) => {
   try {
     if (req.user.role !== 'Admin') {
@@ -87,4 +82,3 @@ exports.getAllModules = async (req, res) => {
     res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
-
