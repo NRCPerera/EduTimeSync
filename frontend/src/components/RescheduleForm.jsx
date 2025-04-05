@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
-// Helper function to convert 12-hour time (e.g., "11:00 AM") to 24-hour format (e.g., "11:00" or "23:00")
-const convertTo24Hour = (time12h) => {
-  if (!time12h) return ''; // Return an empty string if the input is undefined
-
-  const [time, period] = time12h.split(' ');
-  let [hours, minutes] = time.split(':');
-  hours = parseInt(hours, 10);
-  if (period === 'PM' && hours !== 12) hours += 12;
-  if (period === 'AM' && hours === 12) hours = 0;
-  return `${hours.toString().padStart(2, '0')}:${minutes}`;
+// Helper function to convert ISO time to 24-hour format (e.g., "2025-04-02T09:00:00.000Z" to "09:00")
+const convertTo24Hour = (isoTime) => {
+  if (!isoTime) return '';
+  const date = new Date(isoTime);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 };
 
 const RescheduleForm = ({ selectedExam, onClose, onSubmit }) => {
+
+  const date = selectedExam?.startTime ? new Date(selectedExam.startTime).toISOString().split('T')[0] : '';
+  const startTime = selectedExam?.startTime ? convertTo24Hour(selectedExam.startTime) : '';
+  const endTime = selectedExam?.endTime ? convertTo24Hour(selectedExam.endTime) : '';
+
   const [formData, setFormData] = useState({
-    examId: selectedExam._id,
-    newDate: selectedExam.scheduledTime.date,
-    newStartTime: convertTo24Hour(selectedExam.scheduledTime.startTime),
-    newEndTime: convertTo24Hour(selectedExam.scheduledTime.endTime),
+    examId: selectedExam?._id || '',
+    newDate: date,
+    newStartTime: startTime,
+    newEndTime: endTime,
     reason: '',
   });
 
@@ -30,6 +30,22 @@ const RescheduleForm = ({ selectedExam, onClose, onSubmit }) => {
     e.preventDefault();
     onSubmit(formData);
   };
+
+  if (!selectedExam || !selectedExam._id) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Reschedule Examination</h2>
+            <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <p className="text-red-500">Invalid exam data. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -46,7 +62,7 @@ const RescheduleForm = ({ selectedExam, onClose, onSubmit }) => {
             <label className="block text-sm font-medium text-gray-700">Module</label>
             <input
               type="text"
-              value={selectedExam.module}
+              value={selectedExam.module || 'N/A'}
               disabled
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100"
             />
@@ -56,7 +72,7 @@ const RescheduleForm = ({ selectedExam, onClose, onSubmit }) => {
             <label className="block text-sm font-medium text-gray-700">Current Date</label>
             <input
               type="text"
-              value={selectedExam.scheduledTime.date}
+              value={date || 'N/A'}
               disabled
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100"
             />
@@ -66,7 +82,7 @@ const RescheduleForm = ({ selectedExam, onClose, onSubmit }) => {
             <label className="block text-sm font-medium text-gray-700">Current Time</label>
             <input
               type="text"
-              value={`${selectedExam.scheduledTime.startTime} - ${selectedExam.scheduledTime.endTime}`}
+              value={startTime && endTime ? `${startTime} - ${endTime}` : 'N/A'}
               disabled
               className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100"
             />
