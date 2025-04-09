@@ -1,40 +1,64 @@
 const User = require('../models/user');
 const Schedule = require('../models/Schedule');
+const ExaminerAvailability = require('../models/ExaminerAvailability');
 
 exports.getExaminersAvailability = async (req, res) => {
   try {
     const examiners = await User.find({ role: 'Examiner' }).select('name _id');
-    const allTimeSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
 
     const examinerData = await Promise.all(
       examiners.map(async (examiner) => {
+        // Get current load from schedules
         const schedules = await Schedule.find({ examinerId: examiner._id });
         const currentLoad = schedules.length;
         const maxLoad = 5;
 
-        const scheduledTimes = schedules.map(schedule => ({
-          day: schedule.scheduledTime.date.toISOString().split('T')[0],
-          slots: schedule.scheduledTime.slots.map(slot => slot.startTime),
-        }));
+        // Get expertise from scheduled modules
+        const expertise = [...new Set(schedules.map(schedule => schedule.module))];
 
+        // Get availability from ExaminerAvailability model
+        const availabilities = await ExaminerAvailability.find({ 
+          examinerId: examiner._id,
+          date: { $gte: new Date() } // Only future dates
+        }).sort('date');
+
+        // Format availability for today and tomorrow (or next two available days)
         const today = new Date();
-        const availability = [
-          { day: today.toISOString().split('T')[0], slots: [] },
-          { day: new Date(today.setDate(today.getDate() + 1)).toISOString().split('T')[0], slots: [] },
-        ];
+        today.setUTCHours(0, 0, 0, 0); // Normalize to start of day
+        const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
 
-        availability.forEach(dayObj => {
-          const scheduledForDay = scheduledTimes.find(st => st.day === dayObj.day);
-          dayObj.slots = scheduledForDay
-            ? allTimeSlots.filter(slot => !scheduledForDay.slots.includes(slot))
-            : [...allTimeSlots];
-        });
+        const availability = [];
+        let daysAdded = 0;
+        for (const avail of availabilities) {
+          if (daysAdded >= 2) break; // Limit to 2 days for simplicity
+          const availDate = new Date(avail.date).toISOString().split('T')[0];
+          if (new Date(availDate) >= today) {
+            availability.push({
+              day: availDate,
+              slots: avail.availableSlots, // e.g., ["9:00 AM-10:00 AM", "10:00 AM-11:00 AM"]
+            });
+            daysAdded++;
+          }
+        }
 
-        const expertise = [...new Set(schedules.map(schedule => schedule.module))] || [];
+        // If less than 2 days, fill with empty slots
+        if (availability.length < 2) {
+          const datesToAdd = [today, tomorrow].slice(availability.length);
+          datesToAdd.forEach(date => {
+            const dayStr = date.toISOString().split('T')[0];
+            if (!availability.some(a => a.day === dayStr)) {
+              availability.push({
+                day: dayStr,
+                slots: [], // No availability defined
+              });
+            }
+          });
+        }
+
         return {
           id: examiner._id.toString(),
           name: examiner.name,
-          expertise: expertise.length > 0 ? expertise[0] : 'General',
+          expertise: expertise.length > 0 ? expertise : ['General'],
           availability,
           currentLoad,
           maxLoad,

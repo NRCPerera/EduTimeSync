@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, Search, Filter, CheckCircle2, XCircle as XCircle2, AlertCircle } from 'lucide-react';
 import LICHeader from '../../components/LICHeader';
 
-
 const FilterAvailabilityPage = () => {
   const [examiners, setExaminers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,11 +19,12 @@ const FilterAvailabilityPage = () => {
       try {
         const response = await fetch('http://localhost:5000/api/get-examiners-availability');
         if (!response.ok) {
-          const errorData = await response.json(); // Attempt to parse error message from response
+          const errorData = await response.json();
           throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
-        const data = await response.json(); // Parse the successful response
+        const data = await response.json();
         setExaminers(data);
+        console.log('Examiners data:', data);
         setLoading(false);
       } catch (err) {
         setError('Failed to load examiners: ' + (err.message || 'Unknown error'));
@@ -34,26 +34,48 @@ const FilterAvailabilityPage = () => {
     fetchExaminers();
   }, []);
 
-  const expertiseAreas = [...new Set(examiners.map(examiner => examiner.expertise))];
-  const allTimeSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+  const expertiseAreas = [...new Set(examiners.map(examiner => 
+    typeof examiner.expertise === 'string' ? examiner.expertise : ''
+  ).filter(Boolean))];
+  const allTimeSlots = ['09:00AM - 10.00AM', '10:00 AM - 11:00 AM', '11:00 AM - 12:00 PM', '1:00 PM - 2:00 PM', '2:00 PM - 3:00 PM', '3:00 PM - 4:00 PM', '4:00 PM - 5:00 PM'];
 
   const filteredExaminers = examiners.filter(examiner => {
-    const matchesSearch = examiner.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-                         examiner.expertise.toLowerCase().includes(filters.searchQuery.toLowerCase());
+    // Ensure name and expertise are strings
+    const name = typeof examiner.name === 'string' ? examiner.name : '';
+    const expertise = typeof examiner.expertise === 'string' ? examiner.expertise : '';
     
-    const matchesExpertise = !filters.expertise || examiner.expertise === filters.expertise;
+    // Search matching condition
+    const matchesSearch = name.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+                         expertise.toLowerCase().includes(filters.searchQuery.toLowerCase());
     
-    const matchesAvailability = !filters.date || !filters.timeSlot || 
-                               examiner.availability.some(a => 
-                                 a.day === filters.date && a.slots.includes(filters.timeSlot)
-                               );
-
+    // Expertise matching condition
+    const matchesExpertise = !filters.expertise || expertise === filters.expertise;
+    
+    // Availability matching condition with corrected logic
+    let availabilityCondition;
+    if (!filters.date && !filters.timeSlot) {
+        // No filters applied for date or time slot
+        availabilityCondition = true;
+    } else if (filters.date && !filters.timeSlot) {
+        // Only date filter applied
+        availabilityCondition = examiner.availability.some(a => a.day === filters.date);
+    } else if (!filters.date && filters.timeSlot) {
+        // Only time slot filter applied (this might not make sense but handled as per current logic)
+        availabilityCondition = true;
+    } else {
+        // Both date and time slot filters applied
+        availabilityCondition = examiner.availability.some(a => 
+            a.day === filters.date && a.slots.includes(filters.timeSlot)
+        );
+    }
+    
+    const matchesAvailability = availabilityCondition;
+    
     return matchesSearch && matchesExpertise && matchesAvailability;
-  });
+});
 
   const getAvailabilityStatus = (examiner, date, timeSlot) => {
     if (!date || !timeSlot) return null;
-    
     const dayAvailability = examiner.availability.find(a => a.day === date);
     return dayAvailability?.slots.includes(timeSlot);
   };
@@ -82,7 +104,6 @@ const FilterAvailabilityPage = () => {
             </div>
           </div>
 
-          {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -137,7 +158,6 @@ const FilterAvailabilityPage = () => {
             </div>
           </div>
 
-          {/* Results */}
           <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
             <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
