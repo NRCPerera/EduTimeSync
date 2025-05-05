@@ -114,6 +114,7 @@ function App() {
           path="/register-module"
           element={<ProtectedRoute element={<ModuleRegistration />} allowedRoles={['Student']} />}
         />
+        
         <Route
           path="/schedule-event"
           element={<ProtectedRoute element={<ScheduleEvent />} allowedRoles={['LIC']} />}

@@ -8,7 +8,6 @@ const RescheduleRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const token = localStorage.getItem('token');
 
   useEffect(() => {

@@ -5,15 +5,24 @@ import { Lock, Mail, Github, Twitter } from 'lucide-react';
 function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error,setError] = useState('');
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false); // Added missing loading state
+
+  // Function to navigate to different pages (simulating routing)
+  const navigate = (path) => {
+    console.log(`Navigating to: ${path}`);
+    window.location.href = path;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
+    setLoading(true);
+  
     try {
+      console.log('Sending sign-in request:', { email, url: 'http://localhost:5000/api/users/signin' });
       const response = await fetch('http://localhost:5000/api/users/signin', {
         method: 'POST',
         headers: {
@@ -21,29 +30,63 @@ function App() {
         },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+      console.log('Sign-in response:', data);
+  
       if (!response.ok) {
-        throw new Error(data.message || 'Sign in failed');
+        throw new Error(data.error || `Sign-in failed (Status: ${response.status})`);
       }
-
-      console.log('Sign in successful:', data);
-      setSuccess('Sign in successful!');
-      localStorage.setItem('token', data.token); // Store token for authenticated requests
-      // Optionally redirect based on role
-      if (data.user.role === 'Admin') {
-        window.location.href = '/admin-dashboard';
-      } else if (data.user.role === 'LIC') {
-        window.location.href = '/lic-dashboard';
-      }else if (data.user.role === 'Examiner') {
-        window.location.href = '/examiner-dashboard';
-      }else if (data.user.role === 'Student') {
-        window.location.href = '/student-dashboard';
+  
+      // Inspect token
+      console.log('Token received:', data.token ? 'Token exists' : 'No token');
+      
+      if (!data.token) {
+        throw new Error('No token received from server');
       }
+      
+      // Store token with debugging
+      localStorage.clear(); // Clear any previous tokens
+      localStorage.setItem('token', data.token);
+      
+      // Verify token was stored
+      const savedToken = localStorage.getItem('token');
+      console.log('Token saved successfully:', savedToken ? 'Yes' : 'No');
+      
+      if (!savedToken) {
+        throw new Error('Failed to save token to localStorage');
+      }
+      
+      // Log token format
+      console.log('Token format check:', 
+        savedToken.includes('.') ? 'Contains periods (likely JWT)' : 'No periods (might not be JWT)',
+        'Length:', savedToken.length
+      );
+  
+      setSuccess('Sign-in successful! Redirecting...');
+  
+      setTimeout(() => {
+        if (data.user?.role === 'Admin') {
+          navigate('/admin-dashboard');
+        } else if (data.user?.role === 'LIC') {
+          navigate('/lic-dashboard');
+        } else if (data.user?.role === 'Examiner') {
+          navigate('/examiner-dashboard');
+        } else if (data.user?.role === 'Student') {
+          navigate('/student-dashboard');
+        } else {
+          throw new Error(`Unknown user role: ${data.user?.role || 'undefined'}`);
+        }
+      }, 1000);
     } catch (err) {
-      setError(err.message);
-      console.error('Sign in error:', err);
+      let errorMessage = err.message;
+      if (err.message.includes('Failed to fetch')) {
+        errorMessage = 'Unable to connect to the server. Please check if the backend is running at http://localhost:5000.';
+      }
+      setError(errorMessage);
+      console.error('Sign-in error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,6 +102,19 @@ function App() {
             Please sign in to your account
           </p>
         </div>
+
+        {/* Error and Success Messages */}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg">
+            {success}
+          </div>
+        )}
 
         {/* Sign In Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -130,9 +186,22 @@ function App() {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${
+                loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200`}
             >
-              Sign in
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
             </button>
           </div>
         </form>
@@ -173,6 +242,25 @@ function App() {
           <a href="sign-up" className="font-medium text-indigo-600 hover:text-indigo-500">
             Sign up
           </a>
+        </div>
+        
+        {/* Development Mode Quick Access */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <p className="text-xs text-gray-500 mb-2">Development Options:</p>
+          <div className="grid grid-cols-2 gap-2">
+            <a 
+              href="/lic-dashboard?dev=true" 
+              className="text-xs text-center py-1 px-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+            >
+              LIC Dashboard (Dev Mode)
+            </a>
+            <a 
+              href="/examiner-dashboard?dev=true" 
+              className="text-xs text-center py-1 px-2 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+            >
+              Examiner Dashboard (Dev Mode)
+            </a>
+          </div>
         </div>
       </div>
     </div>

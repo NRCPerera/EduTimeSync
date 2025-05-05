@@ -1,4 +1,3 @@
-// backend/controllers/moduleController.js
 const Module = require('../models/Module');
 const User = require('../models/user');
 const ModuleRegistration = require('../models/ModuleRegistration');
@@ -67,10 +66,9 @@ exports.createModule = async (req, res) => {
 
 exports.getAllModules = async (req, res) => {
   try {
-    if (req.user.role !== 'Admin') {
-      return res.status(403).json({ success: false, error: 'Only LICs can view all modules' });
+    if (!['Admin', 'LIC'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Access restricted to Admins and LICs' });
     }
-
     const modules = await Module.find();
     res.status(200).json({
       success: true,

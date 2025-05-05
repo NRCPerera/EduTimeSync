@@ -20,7 +20,7 @@ export default function StudentHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="/student-dashboard" className="hover:text-blue-200 flex items-center gap-1">
+            <a href="/" className="hover:text-blue-200 flex items-center gap-1">
               <Home className="h-4 w-4" />
               Home
             </a>
@@ -59,7 +59,7 @@ export default function StudentHeader() {
                     <Settings className="h-4 w-4" />
                     Settings
                   </a>
-                  <a href="#" className="block px-4 py-2 hover:bg-blue-50 flex items-center gap-2">
+                  <a href="/sign-in" className="block px-4 py-2 hover:bg-blue-50 flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Logout
                   </a>

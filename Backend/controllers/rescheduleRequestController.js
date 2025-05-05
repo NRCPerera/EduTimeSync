@@ -57,11 +57,10 @@ exports.getAllRescheduleRequests = async (req, res) => {
     if (req.user.role !== 'LIC') {
       return res.status(403).json({ success: false, error: 'Access denied. LIC only.' });
     }
-
     const requests = await RescheduleRequest.find()
       .populate('examinerId', 'email name')
-      .populate('scheduleId', 'module scheduledTime');
-
+      .populate('scheduleId', 'module scheduledTime')
+      .lean(); 
     res.status(200).json({
       success: true,
       count: requests.length,
@@ -69,7 +68,7 @@ exports.getAllRescheduleRequests = async (req, res) => {
     });
   } catch (error) {
     console.error('Get reschedule requests error:', error);
-    res.status(500).json({ success: false, error: error.message || 'Server error' });
+    res.status(500).json({ success: false, error: 'Server error while fetching reschedule requests' });
   }
 };
 

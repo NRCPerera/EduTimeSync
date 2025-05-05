@@ -1,4 +1,3 @@
-// backend/controllers/eventController.js
 const Event = require('../models/Event');
 const User = require('../models/user');
 const Module = require('../models/Module');

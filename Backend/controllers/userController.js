@@ -21,11 +21,25 @@ exports.signIn = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    const payload = {
+      id: user._id,
+      role: user.role,
+    };
+
+    // Check if JWT_SECRET is set
+    if (!process.env.JWT_SECRET) {  
+      console.error('JWT_SECRET is not defined in environment variables');  
+    } 
+
+
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      payload,
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '1d' }
     );
+
+    console.log('Sign-in successful:', { userId: user._id, role: user.role });
+    console.log('Token generated:', token ? 'Yes' : 'No');
 
     res.status(200).json({
       message: 'Sign in successful',
@@ -115,7 +129,7 @@ exports.signUp = async (req, res) => {
 // Get Current User Controller
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password'); // Exclude password
+    const user = await User.findById(req.user.id).select('+password'); // Exclude password
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -143,7 +157,7 @@ exports.getLicsAndExaminers = async (req, res) => {
         return res.status(403).json({ message: 'Access denied. Admin only.' });
       }
   
-      const users = await User.find({ role: { $in: ['LIC', 'Examiner'] } }).select('-password');
+      const users = await User.find({ role: { $in: ['LIC', 'Examiner'] } }).select('+password');
       res.status(200).json({
         success: true,
         count: users.length,

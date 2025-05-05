@@ -64,7 +64,7 @@ export default function ExaminerHeader() {
                     <Settings className="h-4 w-4" />
                     Settings
                   </a>
-                  <a href="#" className="block px-4 py-2 hover:bg-amber-50 flex items-center gap-2">
+                  <a href="/sign-in" className="block px-4 py-2 hover:bg-amber-50 flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Logout
                   </a>

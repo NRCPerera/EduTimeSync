@@ -67,3 +67,26 @@ exports.submitEvaluations = async (req, res) => {
     res.status(500).json({ message: 'Server error while submitting evaluations' });
   }
 };
+//get students Evaluation grade and module by studentId
+
+exports.getStudentEvaluation = async (req, res) => {
+  try {
+    const studentId = req.query.studentId; // Get studentId from query parameter
+    if (!studentId) {
+      return res.status(400).json({ message: 'studentId is required' });
+    }
+
+    const evaluations = await Evaluation.find({ studentId }).populate('examinerId', 'name');
+    const formattedEvaluations = evaluations.map((evaluation) => ({
+      id: evaluation._id.toString(), // Ensure ID is a string for frontend
+      module: evaluation.module,
+      grade: evaluation.grade,
+      presentation: evaluation.presentation,
+      examinerName: evaluation.examinerId.name,
+    }));
+    res.status(200).json(formattedEvaluations);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while fetching evaluations' });
+  }
+};
