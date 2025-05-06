@@ -1,5 +1,6 @@
 import React from 'react'
-import AdminHeader from '../../components/AdminHeader'
+import { useNavigate } from "react-router-dom";
+import Header from '../../components/Header';
 
 function FeatureCard({ icon, title, description }) {
   return (
@@ -22,10 +23,11 @@ function TestimonialCard({ quote, author }) {
 }
 
 const Home = () => {
+  const navigate = useNavigate();
   return (
     <div>
-      <AdminHeader />
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-blue-50">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -38,7 +40,8 @@ const Home = () => {
               Manage timetables, coordinate examiner availability, and optimize scheduling with AI-powered automation.
             </p>
             <div className="flex justify-center gap-4">
-              <button className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+              <button className="px-8 py-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+              onClick={() => navigate('/sign-in')}>
                 Get Started for Free
               </button>
               <button className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-lg border-2 border-indigo-600 hover:bg-indigo-50 transition-colors">
@@ -116,7 +119,8 @@ const Home = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-indigo-600">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-white mb-8">Try EduTimeSync for Free Today!</h2>
-          <button className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
+          <button className="px-8 py-4 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+          onClick={() => navigate('/sign-up')}>
             Sign Up Now
           </button>
         </div>

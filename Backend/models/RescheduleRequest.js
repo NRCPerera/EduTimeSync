@@ -11,6 +11,16 @@ const rescheduleRequestSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  currentScheduleTime: {
+    date: { type: String, required: true },
+    startTime: { type: String, required: true }, // "HH:mm"
+    endTime: { type: String, required: true },   // "HH:mm"
+  },
   proposedTime: {
     date: { type: String, required: true },
     startTime: { type: String, required: true }, // "HH:mm"

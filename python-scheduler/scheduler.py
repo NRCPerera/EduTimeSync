@@ -33,8 +33,18 @@ def parse_time_slot(slot, date):
     end_time = UTC.localize(datetime.combine(date, datetime.min.time()).replace(hour=end_hour, minute=int(end_min)))
     return start_time, end_time
 
-def has_conflict(new_start, new_end, existing_schedules, examiner_id, student_id):
+def parse_proposed_time(proposed_time):
+    date = datetime.fromisoformat(proposed_time['date'].replace('Z', '+00:00')).date()
+    start_time = datetime.strptime(proposed_time['startTime'], '%H:%M').time()
+    end_time = datetime.strptime(proposed_time['endTime'], '%H:%M').time()
+    start_datetime = UTC.localize(datetime.combine(date, start_time))
+    end_datetime = UTC.localize(datetime.combine(date, end_time))
+    return start_datetime, end_datetime
+
+def has_conflict(new_start, new_end, existing_schedules, examiner_id, student_id, exclude_schedule_id=None):
     for schedule in existing_schedules:
+        if exclude_schedule_id and str(schedule['_id']) == str(exclude_schedule_id):
+            continue
         start_str = schedule['startTime']
         end_str = schedule['endTime']
         
@@ -149,6 +159,65 @@ def create_schedules():
 
     print('Generated schedules:', schedules)
     return jsonify({'schedules': schedules}), 200
+
+@app.route('/reschedule/<schedule_id>', methods=['PUT'])
+def reschedule_exam(schedule_id):
+    data = request.get_json()
+    proposed_time = data.get('proposedTime')
+    examiner_id = data.get('examinerId')
+    student_id = data.get('studentId')
+
+    if not all([proposed_time, examiner_id, student_id]):
+        return jsonify({'error': 'Missing required fields: proposedTime, examinerId, studentId'}), 400
+
+    try:
+        schedule = db.schedules.find_one({'_id': ObjectId(schedule_id)})
+        if not schedule:
+            return jsonify({'error': 'Schedule not found'}), 404
+
+        new_start, new_end = parse_proposed_time(proposed_time)
+        
+        existing_schedules = list(db.schedules.find({
+            '$or': [
+                {'examinerId': ObjectId(examiner_id)},
+                {'studentId': ObjectId(student_id)}
+            ]
+        }))
+
+        if has_conflict(new_start, new_end, existing_schedules, examiner_id, student_id, schedule_id):
+            return jsonify({'error': 'Proposed time conflicts with existing schedules'}), 409
+
+        update_result = db.schedules.update_one(
+            {'_id': ObjectId(schedule_id)},
+            {
+                '$set': {
+                    'startTime': new_start.isoformat(),
+                    'endTime': new_end.isoformat(),
+                    'updatedAt': datetime.now(UTC).isoformat()
+                }
+            }
+        )
+
+        if update_result.modified_count == 0:
+            return jsonify({'error': 'Failed to update schedule'}), 500
+
+        updated_schedule = db.schedules.find_one({'_id': ObjectId(schedule_id)})
+        return jsonify({
+            'message': 'Schedule updated successfully',
+            'schedule': {
+                '_id': str(updated_schedule['_id']),
+                'examinerId': str(updated_schedule['examinerId']),
+                'studentId': str(updated_schedule['studentId']),
+                'startTime': updated_schedule['startTime'],
+                'endTime': updated_schedule['endTime'],
+                'module': updated_schedule['module'],
+                'googleMeetLink': updated_schedule['googleMeetLink']
+            }
+        }), 200
+
+    except Exception as e:
+        print(f'Reschedule error: {str(e)}')
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)

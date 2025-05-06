@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import ReactDOM from 'react-dom/client';
 import Home from './pages/Common/Home';
 import NotifyPage from './pages/LIC/NotifyPage';
 import Login from './pages/Common/SignIn';

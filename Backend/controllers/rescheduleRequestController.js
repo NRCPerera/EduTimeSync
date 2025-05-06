@@ -28,6 +28,9 @@ exports.createRescheduleRequest = async (req, res) => {
     if (schedule.examinerId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, error: 'Not authorized to reschedule this exam' });
     }
+    if (!schedule.studentId) {
+      return res.status(400).json({ success: false, error: 'Schedule missing studentId' });
+    }
 
     const existingRequest = await RescheduleRequest.findOne({ scheduleId, examinerId: req.user.id });
     if (existingRequest) {
@@ -37,6 +40,12 @@ exports.createRescheduleRequest = async (req, res) => {
     const request = await RescheduleRequest.create({
       scheduleId,
       examinerId: req.user.id,
+      studentId: schedule.studentId,
+      currentScheduleTime: {
+        date: schedule.startTime.toISOString().split('T')[0],
+        startTime: schedule.startTime.toTimeString().slice(0, 5),
+        endTime: schedule.endTime.toTimeString().slice(0, 5),
+      },
       proposedTime,
       reason,
     });
@@ -60,7 +69,11 @@ exports.getAllRescheduleRequests = async (req, res) => {
 
     const requests = await RescheduleRequest.find()
       .populate('examinerId', 'email name')
-      .populate('scheduleId', 'module scheduledTime');
+      .populate('studentId', 'email name')
+      .populate('scheduleId', 'module startTime endTime');
+
+    // Log requests for debugging
+    console.log('Fetched reschedule requests:', JSON.stringify(requests, null, 2));
 
     res.status(200).json({
       success: true,
@@ -93,15 +106,6 @@ exports.updateRescheduleRequest = async (req, res) => {
     request.status = status;
     await request.save();
 
-    if (status === 'approved') {
-      const schedule = await Schedule.findById(request.scheduleId);
-      if (!schedule) {
-        return res.status(404).json({ success: false, error: 'Associated schedule not found' });
-      }
-      schedule.scheduledTime = request.proposedTime;
-      await schedule.save();
-    }
-
     res.status(200).json({
       success: true,
       data: request,
@@ -110,20 +114,22 @@ exports.updateRescheduleRequest = async (req, res) => {
     console.error('Update reschedule request error:', error);
     res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
+};
 
-//   exports.getExaminerRescheduleRequests = async (req, res) => {
-//     try {
-//       const requests = await RescheduleRequest.find({ examinerId: req.user.id })
-//         .populate('scheduleId', 'module', 'scheduledTime', 'googleMeetLink');
-  
-//       res.status(200).json({
-//         success: true,
-//         count: requests.length,
-//         data: requests,
-//       });
-//     } catch (error) {
-//       console.error('Get examiner reschedule requests error:', error);
-//       res.status(500).json({ success: false, error: error.message || 'Server error' });
-//     }
-//   };
+// Get examiner's reschedule requests
+exports.getExaminerRescheduleRequests = async (req, res) => {
+  try {
+    const requests = await RescheduleRequest.find({ examinerId: req.user.id })
+      .populate('scheduleId', 'module googleMeetLink')
+      .populate('studentId', 'email name');
+
+    res.status(200).json({
+      success: true,
+      count: requests.length,
+      data: requests,
+    });
+  } catch (error) {
+    console.error('Get examiner reschedule requests error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Server error' });
+  }
 };

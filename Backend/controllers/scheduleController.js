@@ -169,3 +169,42 @@ exports.getScheduleById = async (req, res) => {
     res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
+
+exports.rescheduleExam = async (req, res) => {
+  try {
+    const { scheduleId } = req.params;
+    const { proposedTime, examinerId, studentId } = req.body;
+
+    if (!proposedTime || !examinerId || !studentId) {
+      return res.status(400).json({ success: false, error: 'Missing required fields: proposedTime, examinerId, studentId' });
+    }
+
+    const schedule = await Schedule.findById(scheduleId);
+    if (!schedule) {
+      return res.status(404).json({ success: false, error: 'Schedule not found' });
+    }
+
+    const rescheduleResponse = await axios.put(`http://localhost:5001/reschedule/${scheduleId}`, {
+      proposedTime,
+      examinerId,
+      studentId,
+    });
+
+    const updatedSchedule = rescheduleResponse.data.schedule;
+
+    res.status(200).json({
+      success: true,
+      message: 'Exam rescheduled successfully',
+      data: {
+        ...updatedSchedule,
+        startTime: new Date(updatedSchedule.startTime).toISOString(),
+        endTime: new Date(updatedSchedule.endTime).toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('Error rescheduling exam:', error.response ? error.response.data : error.message);
+    const status = error.response ? error.response.status : 500;
+    const errorMessage = error.response && error.response.data.error ? error.response.data.error : 'Server error';
+    res.status(status).json({ success: false, error: errorMessage });
+  }
+};

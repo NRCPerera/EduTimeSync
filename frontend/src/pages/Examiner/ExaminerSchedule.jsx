@@ -77,6 +77,11 @@ const ExaminerSchedule = () => {
         },
         body: JSON.stringify({
           scheduleId: formData.examId,
+          currentScheduleTime: {
+            date: formData.currentDate,
+            startTime: formData.currentStartTime,
+            endTime: formData.currentEndTime,
+          },
           proposedTime: {
             date: formData.newDate,
             startTime: formData.newStartTime,
@@ -85,12 +90,12 @@ const ExaminerSchedule = () => {
           reason: formData.reason,
         }),
       });
-
+  
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit reschedule request');
       }
-
+  
       setIsRescheduleModalOpen(false);
       fetchSchedules();
     } catch (err) {
