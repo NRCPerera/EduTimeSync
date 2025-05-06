@@ -73,7 +73,7 @@ const ExaminerSchedule = () => {
 
   const handleSubmitReschedule = async (formData) => {
     try {
-      const response = await fetch('http://localhost:5000/api/reschedule/add', {
+      const response = await fetch('http://localhost:5000/api/rescheduleRequest/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -11,7 +11,6 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [studentData, setStudentData] = useState({});
-  const [presentations, setPresentations] = useState([]);
   const [evaluationResults, setEvaluationResults] = useState([]);
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());

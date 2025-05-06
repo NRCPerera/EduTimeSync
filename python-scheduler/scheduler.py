@@ -38,12 +38,52 @@ def parse_time_slot(slot, date):
     return start_time, end_time
 
 def parse_proposed_time(proposed_time):
-    date = datetime.fromisoformat(proposed_time['date'].replace('Z', '+00:00')).date()
-    start_time = datetime.strptime(proposed_time['startTime'], '%H:%M').time()
-    end_time = datetime.strptime(proposed_time['endTime'], '%H:%M').time()
-    start_datetime = UTC.localize(datetime.combine(date, start_time))
-    end_datetime = UTC.localize(datetime.combine(date, end_time))
-    return start_datetime, end_datetime
+    """Parse the proposed time in various formats and return start and end datetime objects"""
+    print(f"Parsing proposed time: {proposed_time}, type: {type(proposed_time)}")
+    
+    try:
+        # Case 1: If proposedTime is a string (ISO format)
+        if isinstance(proposed_time, str):
+            start_datetime = datetime.fromisoformat(proposed_time.replace('Z', '+00:00'))
+            end_datetime = start_datetime + timedelta(minutes=30)  # Assuming 30 minutes duration
+            print(f"Parsed ISO string: Start={start_datetime}, End={end_datetime}")
+            return start_datetime, end_datetime
+            
+        # Case 2: If proposedTime is a dictionary with date and startTime/endTime
+        elif isinstance(proposed_time, dict) and 'date' in proposed_time:
+            date = datetime.fromisoformat(proposed_time['date'].replace('Z', '+00:00')).date()
+            
+            # Handle different time formats
+            if 'startTime' in proposed_time:
+                if ':' in proposed_time['startTime']:
+                    # Format: HH:MM
+                    start_time = datetime.strptime(proposed_time['startTime'], '%H:%M').time()
+                else:
+                    # Try to parse as ISO time portion
+                    start_time = datetime.fromisoformat(proposed_time['startTime']).time()
+                
+                start_datetime = UTC.localize(datetime.combine(date, start_time))
+                
+                # Handle end time if available, otherwise default to start + 30 min
+                if 'endTime' in proposed_time and proposed_time['endTime']:
+                    if ':' in proposed_time['endTime']:
+                        end_time = datetime.strptime(proposed_time['endTime'], '%H:%M').time()
+                    else:
+                        end_time = datetime.fromisoformat(proposed_time['endTime']).time()
+                    end_datetime = UTC.localize(datetime.combine(date, end_time))
+                else:
+                    end_datetime = start_datetime + timedelta(minutes=30)
+                    
+                print(f"Parsed dict with time: Start={start_datetime}, End={end_datetime}")
+                return start_datetime, end_datetime
+        
+        # Case 3: Format might be unknown, try something else
+        print(f"Unknown format for proposed_time: {proposed_time}")
+        raise ValueError(f"Unsupported proposedTime format: {proposed_time}")
+            
+    except Exception as e:
+        print(f"Error in parse_proposed_time: {str(e)}")
+        raise ValueError(f"Failed to parse proposedTime: {str(e)}")
 
 def has_conflict(new_start, new_end, existing_schedules, examiner_id, student_id, exclude_schedule_id=None):
     for schedule in existing_schedules:
@@ -187,11 +227,11 @@ def reschedule_exam(schedule_id):
             {'_id': ObjectId(schedule_id)},
             {
                 '$set': {
-                    'startTime': new_start.isoformat(),
-                    'endTime': new_end.isoformat(),
+                    'startTime': new_start,  # Store as datetime object
+                    'endTime': new_end,      # Store as datetime object
                     'examinerId': ObjectId(examiner_id),
                     'studentId': ObjectId(student_id),
-                    'updatedAt': datetime.now(UTC).isoformat()
+                    'updatedAt': datetime.now(UTC)  # Also store as datetime
                 }
             }
         )
@@ -208,17 +248,15 @@ def reschedule_exam(schedule_id):
                 '_id': str(updated_schedule['_id']),
                 'examinerId': str(updated_schedule['examinerId']),
                 'studentId': str(updated_schedule['studentId']),
-                'startTime': updated_schedule['startTime'],
-                'endTime': updated_schedule['endTime'],
+                'startTime': updated_schedule['startTime'].isoformat(),  # Convert to string for response
+                'endTime': updated_schedule['endTime'].isoformat(),      # Convert to string for response
                 'module': updated_schedule['module'],
-                'googleMeetLink': updated_schedule['googleMeetLink'],
-                'eventId': str(updated_schedule['eventId'])
+                'googleMeetLink': updated_schedule.get('googleMeetLink')
             }
         }), 200
-
     except Exception as e:
-        print(f'Reschedule error: {str(e)}')
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+        print(f'Error in reschedule_exam: {str(e)}')
+        return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(debug=True, port=5001)

@@ -1,153 +1,148 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, X, AlertCircle } from 'lucide-react';
 
-// Helper function to convert ISO time to 24-hour format (e.g., "2025-04-02T09:00:00.000Z" to "09:00")
-const convertTo24Hour = (isoTime) => {
-  if (!isoTime) return '';
-  const date = new Date(isoTime);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-};
-
-const RescheduleForm = ({ selectedExam, onClose, onSubmit }) => {
-
-  const date = selectedExam?.startTime ? new Date(selectedExam.startTime).toISOString().split('T')[0] : '';
-  const startTime = selectedExam?.startTime ? convertTo24Hour(selectedExam.startTime) : '';
-  const endTime = selectedExam?.endTime ? convertTo24Hour(selectedExam.endTime) : '';
+const RescheduleForm = ({ selectedExam, onClose, onSubmit, error }) => {
+  const examStartTime = selectedExam.startTime ? new Date(selectedExam.startTime) : new Date();
+  const examEndTime = selectedExam.endTime ? new Date(selectedExam.endTime) : new Date();
+  
+  const defaultDate = examStartTime.toISOString().split('T')[0];
+  const defaultStartTime = examStartTime.toTimeString().slice(0, 5);
+  const defaultEndTime = examEndTime.toTimeString().slice(0, 5);
 
   const [formData, setFormData] = useState({
-    examId: selectedExam?._id || '',
-    newDate: date,
-    newStartTime: startTime,
-    newEndTime: endTime,
+    examId: selectedExam._id,
+    newDate: defaultDate,
+    newStartTime: defaultStartTime,
+    newEndTime: defaultEndTime,
     reason: '',
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    // Basic validation
+    if (!formData.newDate || !formData.newStartTime || !formData.newEndTime || !formData.reason) {
+      return;
+    }
     onSubmit(formData);
   };
 
-  if (!selectedExam || !selectedExam._id) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Reschedule Examination</h2>
-            <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <p className="text-red-500">Invalid exam data. Please try again.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Reschedule Examination</h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Reschedule Examination</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleFormSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Module</label>
-            <input
-              type="text"
-              value={selectedExam.module || 'N/A'}
-              disabled
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-            />
+        {error && (
+          <div className="m-4 p-3 rounded-md bg-red-50 text-red-500 flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            <span>{error}</span>
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Current Date</label>
-            <input
-              type="text"
-              value={date || 'N/A'}
-              disabled
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Current Time</label>
-            <input
-              type="text"
-              value={startTime && endTime ? `${startTime} - ${endTime}` : 'N/A'}
-              disabled
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">New Date</label>
-            <input
-              type="date"
-              name="newDate"
-              value={formData.newDate}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">New Start Time (24-hour)</label>
-              <input
-                type="time"
-                name="newStartTime"
-                value={formData.newStartTime}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">New End Time (24-hour)</label>
-              <input
-                type="time"
-                name="newEndTime"
-                value={formData.newEndTime}
-                onChange={handleChange}
-                className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                required
-              />
+        <form onSubmit={handleSubmit} className="p-4">
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Current Details</h4>
+            <div className="bg-gray-50 p-3 rounded-md">
+              <div className="flex items-center gap-3 mb-2">
+                <CalendarIcon className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">
+                  {examStartTime.toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-sm text-gray-600">
+                  {examStartTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                  {examEndTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Reason for Rescheduling</label>
-            <textarea
-              name="reason"
-              value={formData.reason}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-              rows="3"
-              required
-            />
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="newDate" className="block text-sm font-medium text-gray-700 mb-1">
+                New Date
+              </label>
+              <input
+                type="date"
+                id="newDate"
+                name="newDate"
+                value={formData.newDate}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="newStartTime" className="block text-sm font-medium text-gray-700 mb-1">
+                  New Start Time
+                </label>
+                <input
+                  type="time"
+                  id="newStartTime"
+                  name="newStartTime"
+                  value={formData.newStartTime}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="newEndTime" className="block text-sm font-medium text-gray-700 mb-1">
+                  New End Time
+                </label>
+                <input
+                  type="time"
+                  id="newEndTime"
+                  name="newEndTime"
+                  value={formData.newEndTime}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+                Reason for Rescheduling
+              </label>
+              <textarea
+                id="reason"
+                name="reason"
+                value={formData.reason}
+                onChange={handleChange}
+                rows={3}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Please explain why you need to reschedule this examination..."
+                required
+              />
+            </div>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="mt-6 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Submit Request
             </button>
