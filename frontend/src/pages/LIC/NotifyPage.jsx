@@ -42,7 +42,7 @@ const NotifyPage = () => {
 
       const response = await fetch('http://localhost:5000/api/event/get-events', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'x-auth-token': token,
           'Content-Type': 'application/json',
         },
       });
@@ -74,7 +74,7 @@ const NotifyPage = () => {
 
       const response = await fetch('http://localhost:5000/api/get-examiners-availability', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'x-auth-token': token,
           'Content-Type': 'application/json',
         },
       });
@@ -147,7 +147,7 @@ const NotifyPage = () => {
 
       const response = await fetch(`http://localhost:5000/api/notify/status/${eventId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'x-auth-token': token,
           'Content-Type': 'application/json',
         },
       });
@@ -189,7 +189,7 @@ const NotifyPage = () => {
       const response = await fetch('http://localhost:5000/api/notify/send', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'x-auth-token': token,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

@@ -1,7 +1,7 @@
 const Schedule = require('../models/Schedule');
 const ModuleRegistration = require('../models/ModuleRegistration');
 const Event = require('../models/Event');
-const User = require('../models/user');
+const User = require('../models/User');
 const axios = require('axios');
 
 exports.getExaminerSchedules = async (req, res) => {
@@ -26,9 +26,8 @@ exports.getExaminerSchedules = async (req, res) => {
     const schedules = await Schedule.find(query)
       .populate('studentId', 'email')
       .populate('examinerId', 'email')
-      .lean(); 
+      .lean();
 
-    // Format dates to ISO strings
     const formattedSchedules = schedules.map(schedule => ({
       ...schedule,
       startTime: schedule.startTime.toISOString(),
@@ -72,14 +71,12 @@ exports.getStudentSchedules = async (req, res) => {
 
     const formattedSchedules = schedules
       .filter(schedule => {
-        // Convert string-based dates to Date objects
         if (typeof schedule.startTime === 'string') {
           schedule.startTime = new Date(schedule.startTime);
         }
         if (typeof schedule.endTime === 'string') {
           schedule.endTime = new Date(schedule.endTime);
         }
-        // Validate that startTime and endTime are valid Dates
         const isValidStartTime = schedule.startTime instanceof Date && !isNaN(schedule.startTime);
         const isValidEndTime = schedule.endTime instanceof Date && !isNaN(schedule.endTime);
         if (!isValidStartTime || !isValidEndTime) {
@@ -112,6 +109,18 @@ exports.getStudentSchedules = async (req, res) => {
 exports.scheduleEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
+    const { startDate, endDate, duration, module, examinerIds } = req.body;
+
+    if (!startDate || !endDate || !duration || !module || !examinerIds || !Array.isArray(examinerIds)) {
+      return res.status(400).json({ message: 'Missing or invalid required fields' });
+    }
+    console.log('Received data:', { startDate, endDate, duration, module, examinerIds });
+    // Validate examinerIds format (24-character hex strings)
+    const hexStringRegex = /^[0-9a-fA-F]{24}$/;
+    if (!examinerIds.every(id => typeof id === 'string' && hexStringRegex.test(id))) {
+      console.error('Invalid examinerIds:', examinerIds);
+      return res.status(400).json({ message: 'Examiner IDs must be valid 24-character hex strings' });
+    }
 
     const event = await Event.findById(eventId);
     if (!event) {
@@ -122,69 +131,63 @@ exports.scheduleEvent = async (req, res) => {
       return res.status(400).json({ message: 'Event already scheduled' });
     }
 
-    const registrations = await ModuleRegistration.find({ moduleCode: event.module });
-    if (registrations.length < 1) {
-      return res.status(400).json({ message: 'No students registered for this module' });
+    // Log the data being sent to Flask
+    console.log('Sending to Flask:', { startDate, endDate, duration, module, examinerIds, eventId });
+
+    // Call the Flask backend to generate schedules
+    const flaskResponse = await axios.post('http://localhost:5001/schedule', {
+      startDate,
+      endDate,
+      duration,
+      module,
+      examinerIds,
+      eventId,
+    });
+
+    const { schedules, error } = flaskResponse.data;
+
+    // Check for errors in the Flask response
+    if (error) {
+      return res.status(flaskResponse.status || 400).json({ message: error });
     }
 
-    let examinerIds = [];
-    if (event.examinerIds && Array.isArray(event.examinerIds)) {
-      examinerIds = event.examinerIds.map(id => id.toString());
-    } else if (event.examinerIds) {
-      examinerIds = [event.examinerIds.toString()];
+    // Validate that schedules is an array
+    if (!Array.isArray(schedules)) {
+      console.error('Flask response:', flaskResponse.data);
+      return res.status(500).json({ message: 'Invalid response from scheduling service: schedules is not an array' });
     }
 
-    if (examinerIds.length === 0) {
-      return res.status(400).json({ message: 'No examiners assigned to this event' });
-    }
-
-    const startTime = new Date(event.startDate);
-    const endTime = new Date(event.endDate);
-    const totalStudents = registrations.length;
-    const durationInMinutes = event.duration;
-
-    const schedules = [];
-
-    let currentTime = new Date(startTime);
-    let examinerIndex = 0;
-
-    for (let i = 0; i < totalStudents; i++) {
-      const student = registrations[i].studentId;
-      const examinerId = examinerIds[examinerIndex];
-
-      const scheduleStart = new Date(currentTime);
-      const scheduleEnd = new Date(currentTime.getTime() + durationInMinutes * 60000);
-
-      // Stop scheduling if we exceed end date
-      if (scheduleEnd > endTime) {
-        break;
-      }
-
+    // Save schedules to MongoDB
+    const savedSchedules = [];
+    for (const schedule of schedules) {
       const newSchedule = new Schedule({
         eventId: event._id,
-        studentId: student,
-        examinerId: examinerId,
-        startTime: scheduleStart,
-        endTime: scheduleEnd,
+        studentId: schedule.studentId,
+        examinerId: schedule.examinerId,
+        startTime: new Date(schedule.startTime),
+        endTime: new Date(schedule.endTime),
+        module: schedule.module,
+        googleMeetLink: schedule.googleMeetLink,
       });
-
       await newSchedule.save();
-      schedules.push(newSchedule);
-
-      currentTime = new Date(scheduleEnd); // move to next slot
-      examinerIndex = (examinerIndex + 1) % examinerIds.length; // round robin
+      savedSchedules.push(newSchedule);
     }
 
-    event.scheduleIds = schedules.map(s => s._id);
+    // Update event with schedule IDs and status
+    event.scheduleIds = savedSchedules.map(s => s._id);
+    event.status = 'upcoming';
     await event.save();
 
-    res.status(200).json({ message: 'Event scheduled successfully', schedules });
+    res.status(200).json({ message: 'Event scheduled successfully', schedules: savedSchedules });
   } catch (error) {
-    console.error('Error scheduling event:', error.message);
-    res.status(500).json({ message: 'Server error while scheduling event' });
+    console.error('Error scheduling event:', error.message, error.response ? error.response.data : '');
+    const status = error.response ? error.response.status : 500;
+    const message = error.response && error.response.data.error
+      ? error.response.data.error
+      : error.message || 'Server error while scheduling event';
+    res.status(status).json({ message });
   }
 };
-
 
 exports.getScheduleById = async (req, res) => {
   try {

@@ -11,4 +11,4 @@ const UserSchema = new mongoose.Schema({
     profilePic: { type: String, default: "default.jpg" }, 
 });
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.models.User || mongoose.model('User', UserSchema);

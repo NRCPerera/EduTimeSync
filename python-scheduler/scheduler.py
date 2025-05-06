@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 import os
@@ -8,6 +9,9 @@ from pytz import UTC
 
 app = Flask(__name__)
 load_dotenv()
+
+# Configure CORS to allow requests from the Node.js backend
+CORS(app, resources={r"/*": {"origins": "http://localhost:5000"}})
 
 mongo_uri = os.getenv('MONGO_URI')
 client = MongoClient(mongo_uri)
@@ -65,75 +69,64 @@ def has_conflict(new_start, new_end, existing_schedules, examiner_id, student_id
 @app.route('/schedule', methods=['POST'])
 def create_schedules():
     data = request.get_json()
-    start_date = datetime.fromisoformat(data['startDate'].replace('Z', '+00:00'))
-    end_date = datetime.fromisoformat(data['endDate'].replace('Z', '+00:00'))
-    duration = data['duration']
-    module = data['module']
-    examiner_ids = data['examinerIds']
-    event_id = data.get('eventId')
-
-    print('Received examiner IDs:', examiner_ids)
-    print('Received module:', module)
-    print('Start Date:', start_date)
-    print('End Date:', end_date)
-    print('Duration:', duration)
-    print('Event ID:', event_id)
+    print(f'Received data: {data}')  # Debug log
+    try:
+        start_date = datetime.fromisoformat(data['startDate'].replace('Z', '+00:00'))
+        end_date = datetime.fromisoformat(data['endDate'].replace('Z', '+00:00'))
+        duration = data['duration']
+        module = data['module']
+        examiner_ids = data['examinerIds']
+        event_id = data.get('eventId')
+    except (KeyError, ValueError) as e:
+        print(f'Error parsing request data: {str(e)}')
+        return jsonify({'error': f'Invalid request data: {str(e)}'}), 400
 
     registrations = list(db.moduleregistrations.find({'moduleCode': module}))
-    print('Registrations in Python:', registrations)
     student_ids = [str(reg['studentId']) for reg in registrations]
     if not student_ids:
-        print('No student IDs found for module:', module)
+        print(f'No students registered for module: {module}')
         return jsonify({'error': 'No students registered for this module'}), 400
 
     examiner_ids_obj = [ObjectId(id) for id in examiner_ids]
     availabilities = list(db.examineravailabilities.find({'examinerId': {'$in': examiner_ids_obj}, 'module': module}))
-    print('Examiner availabilities:', availabilities)
 
     slots_by_examiner = {}
     for avail in availabilities:
         examiner_id = str(avail['examinerId'])
         date = avail['date']
-        print(f'Processing availability for {examiner_id} on {date}')
         if start_date.date() <= date.date() <= end_date.date():
             slots = []
             for slot in avail['availableSlots']:
                 start_time, end_time = parse_time_slot(slot, date)
-                print(f'Slot: {slot} -> {start_time} to {end_time}')
                 if start_date <= start_time and end_time <= end_date:
                     slots.append({'startTime': start_time, 'endTime': end_time})
-                else:
-                    print(f'Slot {slot} filtered out: outside event range')
             slots_by_examiner[examiner_id] = slots
 
-    print('Slots by examiner:', slots_by_examiner)
     if not any(slots_by_examiner.values()):
-        print('No valid slots after filtering')
+        print('No examiner availability within event dates')
         return jsonify({'error': 'No examiner availability within event dates'}), 400
 
     existing_schedules = list(db.schedules.find({'$or': [
         {'examinerId': {'$in': examiner_ids_obj}},
         {'studentId': {'$in': student_ids}}
     ]}))
-    print('Existing schedules:', existing_schedules)
 
     schedules = []
     available_examiners = list(slots_by_examiner.keys())
     if not available_examiners:
+        print('No examiners with available slots')
         return jsonify({'error': 'No examiners with available slots'}), 400
 
     examiner_index = 0
     for student_id in student_ids:
         examiner_id = available_examiners[examiner_index % len(available_examiners)]
         avail_slots = slots_by_examiner[examiner_id]
-        print(f'Scheduling for student {student_id} with examiner {examiner_id}')
 
         scheduled = False
         for slot in avail_slots:
             current_start = slot['startTime']
             while current_start + timedelta(minutes=duration) <= slot['endTime']:
                 current_end = current_start + timedelta(minutes=duration)
-                print(f'Trying {current_start} to {current_end}')
                 if not has_conflict(current_start, current_end, existing_schedules + schedules, examiner_id, student_id):
                     schedule = {
                         'examinerId': examiner_id,
@@ -142,9 +135,8 @@ def create_schedules():
                         'endTime': current_end.isoformat(),
                         'googleMeetLink': f'https://meet.google.com/event-{len(schedules) + 1}',
                         'module': module,
+                        'eventId': event_id
                     }
-                    if event_id:
-                        schedule['eventId'] = event_id
                     schedules.append(schedule)
                     scheduled = True
                     break
@@ -153,26 +145,29 @@ def create_schedules():
                 break
 
         if not scheduled:
-            print(f'Failed to schedule student {student_id}')
+            print(f'No conflict-free slot for student: {student_id}')
             return jsonify({'error': f'No conflict-free slot for student {student_id}'}), 400
         examiner_index += 1
 
-    print('Generated schedules:', schedules)
+    print(f'Generated schedules: {schedules}')  # Debug log
     return jsonify({'schedules': schedules}), 200
 
 @app.route('/reschedule/<schedule_id>', methods=['PUT'])
 def reschedule_exam(schedule_id):
     data = request.get_json()
+    print(f'Reschedule request data: {data}')  # Debug log
     proposed_time = data.get('proposedTime')
     examiner_id = data.get('examinerId')
     student_id = data.get('studentId')
 
     if not all([proposed_time, examiner_id, student_id]):
+        print('Missing required fields')
         return jsonify({'error': 'Missing required fields: proposedTime, examinerId, studentId'}), 400
 
     try:
         schedule = db.schedules.find_one({'_id': ObjectId(schedule_id)})
         if not schedule:
+            print(f'Schedule not found: {schedule_id}')
             return jsonify({'error': 'Schedule not found'}), 404
 
         new_start, new_end = parse_proposed_time(proposed_time)
@@ -185,6 +180,7 @@ def reschedule_exam(schedule_id):
         }))
 
         if has_conflict(new_start, new_end, existing_schedules, examiner_id, student_id, schedule_id):
+            print('Proposed time conflicts with existing schedules')
             return jsonify({'error': 'Proposed time conflicts with existing schedules'}), 409
 
         update_result = db.schedules.update_one(
@@ -193,15 +189,19 @@ def reschedule_exam(schedule_id):
                 '$set': {
                     'startTime': new_start.isoformat(),
                     'endTime': new_end.isoformat(),
+                    'examinerId': ObjectId(examiner_id),
+                    'studentId': ObjectId(student_id),
                     'updatedAt': datetime.now(UTC).isoformat()
                 }
             }
         )
 
         if update_result.modified_count == 0:
+            print('Failed to update schedule')
             return jsonify({'error': 'Failed to update schedule'}), 500
 
         updated_schedule = db.schedules.find_one({'_id': ObjectId(schedule_id)})
+        print(f'Updated schedule: {updated_schedule}')  # Debug log
         return jsonify({
             'message': 'Schedule updated successfully',
             'schedule': {
@@ -211,7 +211,8 @@ def reschedule_exam(schedule_id):
                 'startTime': updated_schedule['startTime'],
                 'endTime': updated_schedule['endTime'],
                 'module': updated_schedule['module'],
-                'googleMeetLink': updated_schedule['googleMeetLink']
+                'googleMeetLink': updated_schedule['googleMeetLink'],
+                'eventId': str(updated_schedule['eventId'])
             }
         }), 200
 

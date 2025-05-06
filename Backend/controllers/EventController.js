@@ -1,12 +1,12 @@
 const Event = require('../models/Event');
-const User = require('../models/user');
+const User = require('../models/User');
 const Module = require('../models/Module');
 const Schedule = require('../models/Schedule');
-
+const axios = require('axios');
 
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find();
+    const events = await Event.find().populate('examinerIds', 'name');
     res.status(200).json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -27,8 +27,8 @@ exports.getExaminers = async (req, res) => {
 exports.createEvent = async (req, res) => {
   try {
     const { name, startDate, endDate, duration, module, examinerIds } = req.body;
-    if (!name || !startDate || !endDate || !duration || !module || !Array.isArray(examinerIds)) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (!name || !startDate || !endDate || !duration || !module || !Array.isArray(examinerIds) || examinerIds.length === 0) {
+      return res.status(400).json({ message: 'All fields are required, including at least one examiner' });
     }
 
     const start = new Date(startDate);
@@ -53,6 +53,7 @@ exports.createEvent = async (req, res) => {
       endDate: end,
       duration,
       module,
+      examinerIds,
       status: 'pending',
     });
 
@@ -64,11 +65,10 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-
 exports.updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, startDate, endDate, duration, module } = req.body;
+    const { name, startDate, endDate, duration, module, examinerIds } = req.body;
 
     const event = await Event.findById(id);
     if (!event) {
@@ -80,6 +80,13 @@ exports.updateEvent = async (req, res) => {
     event.endDate = endDate ? new Date(endDate) : event.endDate;
     event.duration = duration || event.duration;
     event.module = module || event.module;
+    if (examinerIds && Array.isArray(examinerIds)) {
+      const examiners = await User.find({ _id: { $in: examinerIds }, role: 'Examiner' });
+      if (examiners.length !== examinerIds.length) {
+        return res.status(400).json({ message: 'One or more examiner IDs are invalid' });
+      }
+      event.examinerIds = examinerIds;
+    }
 
     const updatedEvent = await event.save();
     res.status(200).json(updatedEvent);

@@ -1,8 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add for redirection
-import LICHeader from '../../components/LICHeader'; // Adjust to your LIC header component
-
+import { useNavigate } from 'react-router-dom';
+import LICHeader from '../../components/LICHeader';
 
 const ScheduleEvent = () => {
   const [events, setEvents] = useState([]);
@@ -19,7 +18,7 @@ const ScheduleEvent = () => {
     examinerIds: [],
   });
   const [examiners, setExaminers] = useState([]);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchEvents();
@@ -89,46 +88,57 @@ const ScheduleEvent = () => {
     }
   };
 
+  // Frontend fix
   const handleSchedule = async (eventId) => {
     setError(null);
     setSuccess(null);
     setLoading(true);
-  
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/sign-in');
         throw new Error('Please login to continue.');
       }
-  
-      // Add error handling for response
+
+      const event = events.find(e => e._id === eventId);
+      if (!event) throw new Error('Event not found');
+
+      // Fix for examinerIds - make sure we're getting the actual ID strings
+      const examinerIdsArray = event.examinerIds.map(examiner => {
+        // If examinerIds contains objects, extract the ID
+        if (typeof examiner === 'object' && examiner !== null) {
+          return examiner._id || examiner.id || String(examiner);
+        }
+        // If it's already a string, use it directly
+        return String(examiner);
+      });
+
+      console.log('Sending examinerIds:', examinerIdsArray); // Add this for debugging
+
       const response = await fetch(`http://localhost:5000/api/schedule/add/${eventId}`, {
         method: 'POST',
         headers: {
           'x-auth-token': token,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          startDate: event.startDate,
+          endDate: event.endDate,
+          duration: event.duration,
+          module: event.module,
+          examinerIds: examinerIdsArray,
+          eventId: eventId,
+        }),
       });
-  
-      console.log('Response status:', response.status);
-  
-      if (response.status === 401) {
-        localStorage.removeItem('token');
-        navigate('/sign-in');
-        throw new Error('Session expired. Please login again.');
-      }
-  
-      // Parse JSON response regardless of status code
+
       const responseData = await response.json();
-      
+
       if (!response.ok) {
-        // Use the error message from the server if available
-        const errorMessage = responseData.message || 'Failed to schedule event';
-        throw new Error(errorMessage);
+      throw new Error(responseData.message || 'Failed to schedule event');
       }
-  
-      // Success case
-      setSuccess(`Event scheduled successfully with ${responseData.schedules?.length || 0} schedules!`);
+
+      setSuccess(`Event scheduled successfully with ${responseData.schedules.length} schedules!`);
       fetchEvents();
     } catch (err) {
       console.error('Schedule error:', err);
@@ -159,6 +169,10 @@ const ScheduleEvent = () => {
       if (!token) {
         navigate('/sign-in');
         throw new Error('Please login to continue.');
+      }
+
+      if (formData.examinerIds.length === 0) {
+        throw new Error('At least one examiner must be selected');
       }
 
       const response = await fetch('http://localhost:5000/api/event/set-events', {
@@ -219,7 +233,7 @@ const ScheduleEvent = () => {
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-md flex items-center">
-            <div className=" text-red-500 mr-3">
+            <div className="text-red-500 mr-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6"
@@ -261,7 +275,6 @@ const ScheduleEvent = () => {
           </div>
         )}
 
-        {/* Add New Event Button */}
         <div className="mb-8 text-center">
           <button
             onClick={() => setShowForm(!showForm)}
@@ -294,7 +307,6 @@ const ScheduleEvent = () => {
           </button>
         </div>
 
-        {/* Event Creation Form */}
         {showForm && (
           <div className="bg-white p-8 rounded-xl shadow-lg mb-8 border border-indigo-100">
             <h2 className="text-2xl font-semibold mb-6 text-indigo-800">
@@ -371,7 +383,7 @@ const ScheduleEvent = () => {
                     placeholder="Enter duration in minutes"
                   />
                 </div>
-                {/* <div>
+                <div>
                   <label className="block text-gray-700 font-medium mb-2">
                     Examiners
                   </label>
@@ -393,7 +405,7 @@ const ScheduleEvent = () => {
                   <p className="text-gray-500 text-sm mt-1">
                     Hold Ctrl (or Cmd) to select multiple examiners
                   </p>
-                </div> */}
+                </div>
               </div>
               <button
                 type="submit"
@@ -443,7 +455,6 @@ const ScheduleEvent = () => {
           </div>
         )}
 
-        {/* Event List */}
         {loading && !showForm ? (
           <div className="flex justify-center my-12">
             <svg
@@ -599,6 +610,23 @@ const ScheduleEvent = () => {
                           />
                         </svg>
                         <span>Schedules: {event.scheduleIds.length}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        <span>Examiners: {event.examinerIds.map(e => e.name).join(', ')}</span>
                       </div>
                     </div>
 

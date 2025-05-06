@@ -14,6 +14,8 @@ export default function StudentDashboard() {
   const [presentations, setPresentations] = useState([]);
   const [evaluationResults, setEvaluationResults] = useState([]);
   const navigate = useNavigate();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [schedules, setSchedules] = useState([]);
   
   // Fetch student data
   const fetchStudentData = async () => {
@@ -60,21 +62,29 @@ export default function StudentDashboard() {
   };
 
   const fetchPresentations = async () => {
+    const token = localStorage.getItem('token');
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await fetch('http://localhost:5000/api/schedule/student', {
-        credentials: 'include',
-        headers: {
-          'x-auth-token': token
+      const response = await fetch(
+        `http://localhost:5000/api/schedule/student?month=${currentMonth.getMonth() + 1}&year=${currentMonth.getFullYear()}`,
+        {
+          headers: {
+            'x-auth-token': token,
+          },
         }
-      });
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to fetch presentations');
-      setPresentations(data);
+      setSchedules(data.data || []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to fetch your schedules');
+      console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,36 +121,61 @@ export default function StudentDashboard() {
 
   // Calculate time remaining for next presentation
   useEffect(() => {
-    if (!presentations || presentations.length === 0) {
+    if (!schedules || schedules.length === 0) {
       setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       return;
     }
   
-    // Only proceed if we have a valid presentation with a date
-    if (!presentations[0]?.date) {
+    // Find the next upcoming presentation
+    const now = new Date();
+    const upcomingPresentations = schedules
+      .filter(schedule => schedule.startTime && new Date(schedule.startTime) > now)
+      .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+  
+    // If no upcoming presentations, set timer to 0
+    if (upcomingPresentations.length === 0) {
       setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       return;
     }
   
-    const nextPresentation = new Date(presentations[0].date);
-    const timer = setInterval(() => {
+    // Use the closest upcoming presentation
+    const nextPresentation = new Date(upcomingPresentations[0].startTime);
+    
+    // Initial calculation
+    const calculateTimeLeft = () => {
       const now = new Date();
       const difference = nextPresentation - now;
       
       if (difference > 0) {
+        // Calculate time units precisely
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
         
-        setTimeLeft({ days, hours, minutes, seconds });
+        return { days, hours, minutes, seconds };
       } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // Time has passed
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      }
+    };
+  
+    // Set initial time left
+    setTimeLeft(calculateTimeLeft());
+    
+    // Update timer every second
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+      
+      // Check if countdown has reached zero or passed
+      const difference = nextPresentation - new Date();
+      if (difference <= 0) {
+        clearInterval(timer);
       }
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [presentations]);
+  }, [schedules]);
   
   // Track scroll progress
   useEffect(() => {
@@ -161,13 +196,13 @@ export default function StudentDashboard() {
   };
   
   const nextSlide = () => {
-    if (presentations.length === 0) return;
-    setCurrentSlide((prev) => (prev + 1) % presentations.length);
+    if (schedules.length === 0) return;
+    setCurrentSlide((prev) => (prev + 1) % schedules.length);
   };
   
   const prevSlide = () => {
-    if (presentations.length === 0) return;
-    setCurrentSlide((prev) => (prev - 1 + presentations.length) % presentations.length);
+    if (schedules.length === 0) return;
+    setCurrentSlide((prev) => (prev - 1 + schedules.length) % schedules.length);
   };
   
   // Toggle dark mode
@@ -214,7 +249,7 @@ export default function StudentDashboard() {
         
         <div className="flex space-x-4 items-center">
           {/* Mini Countdown when scrolled */}
-          {presentations.length > 0 && (
+          {schedules.length > 0 && (
             <div className={`hidden md:flex items-center space-x-2 ${scrollProgress > 20 ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
               <span className="text-sm font-medium">Next: </span>
               <span className="text-sm font-semibold text-blue-600">
@@ -252,7 +287,7 @@ export default function StudentDashboard() {
             Welcome, {studentData?.name || 'Student'}!
           </h1>
           
-          {presentations.length > 0 ? (
+          {schedules.length > 0 ? (
             <div className="mb-8">
               <h2 className="text-xl mb-4 text-gray-500">Next Presentation Starts In:</h2>
               <div className="flex justify-center gap-4">
@@ -292,7 +327,7 @@ export default function StudentDashboard() {
       </section>
       
       {/* Upcoming Presentations (Slideshow) */}
-      {presentations.length > 0 && (
+      {schedules.length > 0 && (
         <section className={`py-16 px-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <div className="max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold mb-8 text-center flex items-center justify-center gap-3">
@@ -318,7 +353,7 @@ export default function StudentDashboard() {
               
               {/* Slides */}
               <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-                {presentations.map((presentation, index) => (
+                {schedules.map((presentation, index) => (
                   <div key={presentation._id} className="w-full flex-shrink-0 p-6 md:p-10">
                     <div className={`h-full ${darkMode ? 'bg-gray-700' : 'bg-blue-50'} rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 transition-all duration-300`}>
                       <div className="flex-shrink-0 w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-full bg-blue-100">
@@ -326,12 +361,12 @@ export default function StudentDashboard() {
                       </div>
                       
                       <div className="flex-grow text-center md:text-left">
-                        <h3 className="text-2xl font-bold mb-2">{presentation.module?.name || 'Presentation'}</h3>
+                        <h3 className="text-2xl font-bold mb-2">{presentation.module || 'Presentation'}</h3>
                         <p className="text-gray-500 mb-2">
-                          <span className="font-medium">Date & Time:</span> {new Date(presentation.date).toLocaleString()}
+                          <span className="font-medium">Date & Time:</span> {new Date(presentation.startTime).toLocaleString()}
                         </p>
                         <p className="text-gray-500 mb-4">
-                          <span className="font-medium">Examiner:</span> {presentation.examiner?.name || 'Not assigned'}
+                          <span className="font-medium">Examiner:</span> {presentation.examinerId?.email || 'Not assigned'}
                         </p>
                         
                         <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-300">
@@ -345,7 +380,7 @@ export default function StudentDashboard() {
               
               {/* Slide Indicators */}
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                {presentations.map((_, index) => (
+                {schedules.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
