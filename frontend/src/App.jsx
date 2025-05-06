@@ -113,9 +113,14 @@ function App() {
           path="/register-module"
           element={<ProtectedRoute element={<ModuleRegistration />} allowedRoles={['Student']} />}
         />
+        
         <Route
           path="/schedule-event"
           element={<ProtectedRoute element={<ScheduleEvent />} allowedRoles={['LIC']} />}
+        />
+        <Route
+          path="/lic-dashboard"
+          element={<ProtectedRoute element={<LICDashboard />} allowedRoles={['LIC']} />}
         />
 
       </Routes>

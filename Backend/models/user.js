@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
     nic: { type: String, required: true }, 
     phoneNumber: { type: String, required: true, match: /^\d{10}$/ }, // Phone number validation
     address: { type: String, required: true },
+    profilePic: { type: String, default: "default.jpg" }, 
 });
 
 module.exports = mongoose.model("User", UserSchema);

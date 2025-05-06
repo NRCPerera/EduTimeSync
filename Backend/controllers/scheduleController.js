@@ -26,7 +26,7 @@ exports.getExaminerSchedules = async (req, res) => {
     const schedules = await Schedule.find(query)
       .populate('studentId', 'email')
       .populate('examinerId', 'email')
-      .lean(); // Use lean() for plain JS objects
+      .lean(); 
 
     // Format dates to ISO strings
     const formattedSchedules = schedules.map(schedule => ({
@@ -95,53 +95,74 @@ exports.scheduleEvent = async (req, res) => {
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
-    console.log('Event:', event);
-    console.log('Module to find:', event.module);
-    if (event.scheduleIds.length > 0) {
+
+    if (event.scheduleIds && event.scheduleIds.length > 0) {
       return res.status(400).json({ message: 'Event already scheduled' });
     }
 
     const registrations = await ModuleRegistration.find({ moduleCode: event.module });
-    console.log('Registrations:', registrations.length);
     if (registrations.length < 1) {
       return res.status(400).json({ message: 'No students registered for this module' });
     }
 
-    const examinerIds = event.examinerIds.map(id => id.toString()); // Use event-specific examinerIds
-    console.log('Examiner IDs:', examinerIds);
+    let examinerIds = [];
+    if (event.examinerIds && Array.isArray(event.examinerIds)) {
+      examinerIds = event.examinerIds.map(id => id.toString());
+    } else if (event.examinerIds) {
+      examinerIds = [event.examinerIds.toString()];
+    }
 
-    const scheduleResponse = await axios.post('http://localhost:5001/schedule', {
-      startDate: event.startDate.toISOString(),
-      endDate: event.endDate.toISOString(),
-      duration: event.duration,
-      module: event.module,
-      examinerIds,
-      eventId: event._id,
-    });
+    if (examinerIds.length === 0) {
+      return res.status(400).json({ message: 'No examiners assigned to this event' });
+    }
 
-    const schedulesData = scheduleResponse.data.schedules;
+    const startTime = new Date(event.startDate);
+    const endTime = new Date(event.endDate);
+    const totalStudents = registrations.length;
+    const durationInMinutes = event.duration;
 
-    const schedules = await Promise.all(
-      schedulesData.map(async (schedule) => {
-        const newSchedule = new Schedule({
-          ...schedule,
-          eventId,
-          startTime: new Date(schedule.startTime),
-          endTime: new Date(schedule.endTime),
-        });
-        return await newSchedule.save();
-      })
-    );
+    const schedules = [];
+
+    let currentTime = new Date(startTime);
+    let examinerIndex = 0;
+
+    for (let i = 0; i < totalStudents; i++) {
+      const student = registrations[i].studentId;
+      const examinerId = examinerIds[examinerIndex];
+
+      const scheduleStart = new Date(currentTime);
+      const scheduleEnd = new Date(currentTime.getTime() + durationInMinutes * 60000);
+
+      // Stop scheduling if we exceed end date
+      if (scheduleEnd > endTime) {
+        break;
+      }
+
+      const newSchedule = new Schedule({
+        eventId: event._id,
+        studentId: student,
+        examinerId: examinerId,
+        startTime: scheduleStart,
+        endTime: scheduleEnd,
+      });
+
+      await newSchedule.save();
+      schedules.push(newSchedule);
+
+      currentTime = new Date(scheduleEnd); // move to next slot
+      examinerIndex = (examinerIndex + 1) % examinerIds.length; // round robin
+    }
 
     event.scheduleIds = schedules.map(s => s._id);
     await event.save();
 
     res.status(200).json({ message: 'Event scheduled successfully', schedules });
   } catch (error) {
-    console.error('Error scheduling event:', error.response ? error.response.data : error.message);
+    console.error('Error scheduling event:', error.message);
     res.status(500).json({ message: 'Server error while scheduling event' });
   }
 };
+
 
 exports.getScheduleById = async (req, res) => {
   try {

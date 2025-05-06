@@ -3,6 +3,8 @@ const router = express.Router();
 const evaluationController = require('../controllers/EvaluationController');
 
 router.get('/students', evaluationController.getStudentsForEvaluation);
+router.get('/studentgrades/:studentId',evaluationController.getStudentEvaluation);
 router.post('/submit', evaluationController.submitEvaluations);
+
 
 module.exports = router;

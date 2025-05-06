@@ -67,7 +67,7 @@ export default function LICHeader() {
                     <Settings className="h-4 w-4" />
                     Settings
                   </a>
-                  <a href="#" className="block px-4 py-2 hover:bg-emerald-50 flex items-center gap-2">
+                  <a href="/sign-in" className="block px-4 py-2 hover:bg-emerald-50 flex items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Logout
                   </a>
@@ -91,7 +91,7 @@ export default function LICHeader() {
             <a href="/lic-dashboard" className="block py-2 hover:text-emerald-200">Home</a>
             <a href="/lic-dashboard" className="block py-2 hover:text-emerald-200">Dashboard</a>
             <a href="/events-page" className="block py-2 hover:text-emerald-200">Create Events</a>
-            <a href="/filter-availability" className="block py-2 hover:text-emerald-200">Assign Examiners</a>
+            <a href="/assign-events" className="block py-2 hover:text-emerald-200">Assign Examiners</a>
           </div>
         )}
       </div>

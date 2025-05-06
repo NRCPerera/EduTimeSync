@@ -12,6 +12,7 @@ const eventRoutes = require('./routes/EventRoutes');
 const filterexaminerRoutes = require('./routes/FilterAvailabilityRoutes');
 const rescheduleRequestRoutes = require("./routes/rescheduleRequestRoute");
 const moduleRoutes = require("./routes/moduleRoute");
+const authRoutes = require('./routes/auth'); 
 
 dotenv.config();
 const app = express();
@@ -20,19 +21,23 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors()); // Enable CORS for frontend
+app.use(cors({
+  origin: 'http://localhost:5173',  // frontend origin
+  credentials: true,                // allow credentials (cookies, headers)
+}));
 app.use(express.json()); // Parse JSON bodies
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes); 
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/examiner', ExaminerAvailabilityRoutes);
 app.use('/api/assigned', assignedEventRoutes);
 app.use('/api/evaluations', evaluationRoutes);
-app.use('/api', eventRoutes);
+app.use('/api/event', eventRoutes);
 app.use('/api', filterexaminerRoutes);
-app.use('/api/reschedule', rescheduleRequestRoutes);
-app.use('/api/modules', moduleRoutes);
+app.use('/api/rescheduleRequest', rescheduleRequestRoutes);
+app.use('/api/module', moduleRoutes);
 
 // Error handling middleware (optional)
 app.use((err, req, res, next) => {

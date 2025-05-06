@@ -17,7 +17,7 @@ const ExaminerAvailabilitySchema = new mongoose.Schema({
     required: [true, 'Please add date'],
   },
   availableSlots: {
-    type: [String], // e.g., ["9:00 AM-10:00 AM"]
+    type: [String], 
     required: [true, 'Please select at least one time slot'],
     validate: {
       validator: function (v) {
@@ -30,6 +30,11 @@ const ExaminerAvailabilitySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  notificationStatus: {
+    eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
+    status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+    updatedAt: { type: Date },
+  }
 });
 
 ExaminerAvailabilitySchema.pre('save', function (next) {

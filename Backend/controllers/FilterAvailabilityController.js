@@ -8,12 +8,11 @@ exports.getExaminersAvailability = async (req, res) => {
 
     const examinerData = await Promise.all(
       examiners.map(async (examiner) => {
-        // Get current load from schedules
+       
         const schedules = await Schedule.find({ examinerId: examiner._id });
         const currentLoad = schedules.length;
         const maxLoad = 5;
 
-        // Get expertise from scheduled modules
         const expertise = [...new Set(schedules.map(schedule => schedule.module))];
 
         // Get availability from ExaminerAvailability model
@@ -70,5 +69,27 @@ exports.getExaminersAvailability = async (req, res) => {
   } catch (error) {
     console.error('Error fetching examiners availability:', error);
     res.status(500).json({ message: 'Server error while fetching examiners availability' });
+  }
+};
+
+exports.sendNotification = async (req, res) => {
+  try {
+    const { eventId, examinerIds, message } = req.body;
+    if (!eventId || !examinerIds || !message) {
+      return res.status(400).json({ message: 'Event ID, examiner IDs, and message are required' });
+    }
+
+    await ExaminerAvailability.updateMany(
+      { examinerId: { $in: examinerIds } },
+      { 
+        notificationStatus: { eventId, status: 'pending', updatedAt: new Date() },
+      }
+    );
+
+    console.log('Notifications sent:', { eventId, examinerIds, message });
+    res.status(200).json({ message: 'Notifications sent successfully' });
+  } catch (error) {
+    console.error('Send notification error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
