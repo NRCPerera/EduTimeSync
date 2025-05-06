@@ -25,7 +25,7 @@ const RescheduleRequests = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/reschedule/all', {
+      const response = await fetch('http://localhost:5000/api/rescheduleRequest/all', {
         headers: {
           'x-auth-token': token,
         },
@@ -72,7 +72,7 @@ const RescheduleRequests = () => {
       }
 
       // Update the reschedule request status
-      const updateResponse = await fetch(`http://localhost:5000/api/reschedule/${requestId}`, {
+      const updateResponse = await fetch(`http://localhost:5000/api/rescheduleRequest/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ const RescheduleRequests = () => {
 
   const handleReject = async (requestId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/reschedule/${requestId}`, {
+      const response = await fetch(`http://localhost:5000/api/rescheduleRequest/${requestId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

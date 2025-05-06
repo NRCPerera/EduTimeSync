@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Trash2, PlusCircle } from 'lucide-react';
 import AddUser from '../../components/AddUsers'; 
+import AdminHeader from '../../components/AdminHeader';
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -104,6 +105,7 @@ const UserManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      <AdminHeader />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Manage LICs and Examiners</h1>

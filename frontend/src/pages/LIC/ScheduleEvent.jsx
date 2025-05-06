@@ -1,5 +1,8 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Add for redirection
+import LICHeader from '../../components/LICHeader'; // Adjust to your LIC header component
+
 
 const ScheduleEvent = () => {
   const [events, setEvents] = useState([]);
@@ -126,7 +129,7 @@ const ScheduleEvent = () => {
   
       // Success case
       setSuccess(`Event scheduled successfully with ${responseData.schedules?.length || 0} schedules!`);
-      fetchEvents(); clear 
+      fetchEvents();
     } catch (err) {
       console.error('Schedule error:', err);
       setError(err.message || 'An unexpected error occurred while scheduling');
@@ -207,6 +210,7 @@ const ScheduleEvent = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
+      <LICHeader />
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-indigo-800 mb-2">Event Scheduler</h1>

@@ -1,7 +1,7 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import LICHeader from '../../components/LICHeader';
-import EventForm from '../../pages/LIC/ScheduleEvent'; 
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -142,7 +142,10 @@ const LICDashBoard = () => {
       
       const response = await fetch(`${API_URL}/users/me`, {
         method: 'GET',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
         credentials: 'include'
       });
       
@@ -508,13 +511,7 @@ const LICDashBoard = () => {
         )}
       </div>
 
-      <EventForm
-        isOpen={isEventFormOpen}
-        onClose={() => setIsEventFormOpen(false)}
-        onEventCreated={handleEventCreated}
-        modules={modules}
-        examiners={examiners}
-      />
+
     </div>
   );
 };

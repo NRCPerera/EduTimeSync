@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { createContext, useState, useContext } from 'react';
 import { GraduationCap, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';

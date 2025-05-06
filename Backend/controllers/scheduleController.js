@@ -70,11 +70,33 @@ exports.getStudentSchedules = async (req, res) => {
       .populate('examinerId', 'email')
       .lean();
 
-    const formattedSchedules = schedules.map(schedule => ({
-      ...schedule,
-      startTime: schedule.startTime.toISOString(),
-      endTime: schedule.endTime.toISOString(),
-    }));
+    const formattedSchedules = schedules
+      .filter(schedule => {
+        // Convert string-based dates to Date objects
+        if (typeof schedule.startTime === 'string') {
+          schedule.startTime = new Date(schedule.startTime);
+        }
+        if (typeof schedule.endTime === 'string') {
+          schedule.endTime = new Date(schedule.endTime);
+        }
+        // Validate that startTime and endTime are valid Dates
+        const isValidStartTime = schedule.startTime instanceof Date && !isNaN(schedule.startTime);
+        const isValidEndTime = schedule.endTime instanceof Date && !isNaN(schedule.endTime);
+        if (!isValidStartTime || !isValidEndTime) {
+          console.warn('Invalid schedule found:', {
+            scheduleId: schedule._id,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+          });
+          return false;
+        }
+        return true;
+      })
+      .map(schedule => ({
+        ...schedule,
+        startTime: schedule.startTime.toISOString(),
+        endTime: schedule.endTime.toISOString(),
+      }));
 
     res.status(200).json({
       success: true,

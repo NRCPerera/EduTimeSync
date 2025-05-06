@@ -26,7 +26,7 @@ const ModuleList = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/modules/all', {
+      const response = await fetch('http://localhost:5000/api/module/all', {
         headers: {
           'x-auth-token': token,
         },
