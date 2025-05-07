@@ -1,4 +1,3 @@
-// backend/models/ExaminerAvailability.js
 const mongoose = require('mongoose');
 
 const ExaminerAvailabilitySchema = new mongoose.Schema({
@@ -12,19 +11,16 @@ const ExaminerAvailabilitySchema = new mongoose.Schema({
     required: [true, 'Please add module name'],
     trim: true,
   },
-  date: {
+  weekStart: {
     type: Date,
-    required: [true, 'Please add date'],
+    required: [true, 'Please add week start date'],
   },
-  availableSlots: {
-    type: [String], 
-    required: [true, 'Please select at least one time slot'],
-    validate: {
-      validator: function (v) {
-        return v.length > 0;
-      },
-      message: 'Please select at least one time slot',
-    },
+  timeSlots: {
+    Monday: { type: [String], default: [] },
+    Tuesday: { type: [String], default: [] },
+    Wednesday: { type: [String], default: [] },
+    Thursday: { type: [String], default: [] },
+    Friday: { type: [String], default: [] },
   },
   createdAt: {
     type: Date,
@@ -44,5 +40,5 @@ ExaminerAvailabilitySchema.pre('save', function (next) {
   }
   next();
 });
-
+ExaminerAvailabilitySchema.index({ weekStart: 1, examinerId: 1 }, { unique: true });
 module.exports = mongoose.model('ExaminerAvailability', ExaminerAvailabilitySchema);

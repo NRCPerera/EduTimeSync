@@ -9,7 +9,6 @@ const ExaminerAvailabilityRoutes = require('./routes/ExaminerAvailabilityRoute')
 const assignedEventRoutes = require('./routes/AssignedEventsRoute');
 const evaluationRoutes = require('./routes/EvaluationRoutes');
 const eventRoutes = require('./routes/EventRoutes');
-const filterexaminerRoutes = require('./routes/FilterAvailabilityRoutes');
 const rescheduleRequestRoutes = require("./routes/rescheduleRequestRoute");
 const moduleRoutes = require("./routes/moduleRoute");
 const authRoutes = require('./routes/auth'); 
@@ -37,7 +36,6 @@ app.use('/api/examiner', ExaminerAvailabilityRoutes);
 app.use('/api/assigned', assignedEventRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/event', eventRoutes);
-app.use('/api', filterexaminerRoutes);
 app.use('/api/rescheduleRequest', rescheduleRequestRoutes);
 app.use('/api/module', moduleRoutes);
 
