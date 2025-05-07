@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil, Trash2, PlusCircle } from 'lucide-react';
-import AddUser from '../../components/AddUsers'; 
+import { Pencil, Trash2, PlusCircle, FileText } from 'lucide-react';
+import AddUser from '../../components/AddUsers';
 import AdminHeader from '../../components/AdminHeader';
 
 const UserManagement = () => {
@@ -10,7 +10,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editUser, setEditUser] = useState(null);
-  const [isAddingNew, setIsAddingNew] = useState(false); // New state for toggling AddUser
+  const [isAddingNew, setIsAddingNew] = useState(false);
 
   const token = localStorage.getItem('token');
 
@@ -103,6 +103,33 @@ const UserManagement = () => {
     }
   };
 
+  const handleGeneratePDF = async (role) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/generate-pdf/${role}`, {
+        headers: {
+          'x-auth-token': token,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to generate ${role} PDF`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${role}s_List_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <AdminHeader />
@@ -111,13 +138,29 @@ const UserManagement = () => {
           <h1 className="text-2xl font-bold text-gray-900">Manage LICs and Examiners</h1>
           <p className="text-gray-600 mt-1">Manage and update LIC and Examiner accounts</p>
         </div>
-        <button
-          onClick={() => setIsAddingNew(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-        >
-          <PlusCircle className="h-5 w-5" />
-          Add New User
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleGeneratePDF('LIC')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <FileText className="h-5 w-5" />
+            Generate LICs PDF
+          </button>
+          <button
+            onClick={() => handleGeneratePDF('Examiner')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <FileText className="h-5 w-5" />
+            Generate Examiners PDF
+          </button>
+          <button
+            onClick={() => setIsAddingNew(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+          >
+            <PlusCircle className="h-5 w-5" />
+            Add New User
+          </button>
+        </div>
       </div>
 
       {isAddingNew && (
@@ -176,8 +219,8 @@ const UserManagement = () => {
                         onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
                         className="p-1 border rounded"
                       >
-                        <option value="examiner">Examiner</option>
-                        <option value="lic">LIC</option>
+                        <option value="Examiner">Examiner</option>
+                        <option value="LIC">LIC</option>
                       </select>
                     ) : (
                       user.role

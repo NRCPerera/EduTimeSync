@@ -1,7 +1,7 @@
 const Schedule = require('../models/Schedule');
 const ModuleRegistration = require('../models/ModuleRegistration');
 const Event = require('../models/Event');
-const User = require('../models/User');
+const User = require('../models/user');
 const axios = require('axios');
 
 exports.getExaminerSchedules = async (req, res) => {
