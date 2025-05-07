@@ -80,3 +80,23 @@ exports.getAllModules = async (req, res) => {
     res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
+
+exports.deleteModule = async (req, res) => {
+  try {
+    if (req.user.role !== 'Admin') {
+      return res.status(403).json({ success: false, error: 'Only Admins can delete modules' });
+    }
+
+    const moduleId = req.params.id;
+    const module = await Module.findById(moduleId);
+    if (!module) {
+      return res.status(404).json({ success: false, error: 'Module not found' });
+    }
+
+    await Module.findByIdAndDelete(moduleId);
+    res.status(200).json({ success: true, message: 'Module deleted successfully' });
+  } catch (error) {
+    console.error('Delete module error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Server error' });
+  }
+};

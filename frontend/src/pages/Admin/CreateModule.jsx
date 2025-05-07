@@ -34,7 +34,7 @@ const CreateModule = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/modules/create', {
+      const response = await fetch('http://localhost:5000/api/module/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,7 +49,8 @@ const CreateModule = () => {
       }
 
       setSuccess(`Module ${data.data.code} - ${data.data.name} created successfully`);
-      setFormData({ code: '', name: '', password: '' }); // Reset form
+      setFormData({ code: '', name: '', password: '' }); 
+      navigate('/module-list')// Reset form
     } catch (err) {
       setError(err.message);
       console.error('Create module error:', err);

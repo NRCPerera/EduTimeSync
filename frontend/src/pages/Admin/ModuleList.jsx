@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Book, Calendar } from 'lucide-react';
+import { Book, Calendar, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../../components/AdminHeader'; // Adjust to your LIC header component
 
@@ -46,6 +46,32 @@ const ModuleList = () => {
     }
   };
 
+  const handleDelete = async (moduleId) => {
+    if (!window.confirm('Are you sure you want to delete this module?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/module/${moduleId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-auth-token': token,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete module');
+      }
+
+      // Refresh module list after deletion
+      setModules(modules.filter((module) => module._id !== moduleId));
+    } catch (err) {
+      setError(err.message);
+      console.error('Delete module error:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminHeader />
@@ -53,6 +79,12 @@ const ModuleList = () => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">All Modules</h1>
+          <button
+            onClick={() => navigate('/create-module')}
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+          >
+            Create Module
+          </button>
         </div>
 
         {loading ? (
@@ -70,6 +102,22 @@ const ModuleList = () => {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{module.code} - {module.name}</h3>
                       <p className="text-sm text-gray-600">Password: {module.password}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigate(`/edit-module/${module._id}`)}
+                        className="p-2 text-gray-600 hover:text-indigo-600"
+                        title="Edit Module"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(module._id)}
+                        className="p-2 text-gray-600 hover:text-red-600"
+                        title="Delete Module"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     </div>
                   </div>
 

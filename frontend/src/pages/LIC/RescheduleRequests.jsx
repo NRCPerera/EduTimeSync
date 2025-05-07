@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, CheckCircle, XCircle, AlertCircle, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LICHeader from '../../components/LICHeader';
 
@@ -8,6 +8,8 @@ const RescheduleRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -46,18 +48,15 @@ const RescheduleRequests = () => {
 
   const handleApprove = async (requestId) => {
     try {
-      // Find the request in local state
       const request = requests.find(r => r._id === requestId);
       if (!request) {
         throw new Error('Reschedule request not found in local state');
       }
 
-      // Log request for debugging
       console.log('Request data:', JSON.stringify(request, null, 2));
 
       const { proposedTime, examinerId, scheduleId, studentId } = request;
 
-      // Validate required fields
       if (!proposedTime || !proposedTime.date || !proposedTime.startTime || !proposedTime.endTime) {
         throw new Error('Missing or incomplete proposedTime');
       }
@@ -71,7 +70,6 @@ const RescheduleRequests = () => {
         throw new Error('Missing studentId');
       }
 
-      // Update the reschedule request status
       const updateResponse = await fetch(`http://localhost:5000/api/rescheduleRequest/${requestId}`, {
         method: 'PUT',
         headers: {
@@ -86,7 +84,6 @@ const RescheduleRequests = () => {
         throw new Error(updateData.error || 'Failed to approve request');
       }
 
-      // Call the schedule update endpoint to reschedule the exam
       const scheduleResponse = await fetch(`http://localhost:5000/api/schedule/update/${scheduleId._id}`, {
         method: 'PUT',
         headers: {
@@ -105,7 +102,6 @@ const RescheduleRequests = () => {
         throw new Error(scheduleData.error || 'Failed to reschedule exam');
       }
 
-      // Update the local state
       setRequests(requests.map(request =>
         request._id === requestId ? { ...request, status: 'approved' } : request
       ));
@@ -140,13 +136,44 @@ const RescheduleRequests = () => {
     }
   };
 
-  // Helper function to safely extract date
+  const generateReport = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/rescheduleRequest/monthly/report/pdf?month=${reportMonth}&year=${reportYear}`,
+        {
+          headers: {
+            'x-auth-token': token,
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to generate report');
+      }
+  
+      // Get the PDF blob
+      const blob = await response.blob();
+      const monthName = new Date(reportYear, reportMonth - 1).toLocaleString('default', { month: 'long' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reschedule_Requests_${monthName}_${reportYear}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message);
+      console.error('Report generation error:', err);
+    }
+  };
+
   const getDateString = (timeObj) => {
     if (!timeObj || !timeObj.date) return 'N/A';
     return new Date(timeObj.date).toLocaleDateString();
   };
 
-  // Helper function to safely extract time range
   const getTimeString = (timeObj) => {
     if (!timeObj || !timeObj.startTime || !timeObj.endTime) return 'N/A';
     return `${timeObj.startTime} - ${timeObj.endTime}`;
@@ -162,13 +189,40 @@ const RescheduleRequests = () => {
             <h1 className="text-2xl font-bold text-gray-900">Reschedule Requests</h1>
             <p className="text-gray-600 mt-1">Review and manage examination reschedule requests</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <AlertCircle className="h-5 w-5 text-yellow-500" />
               <span className="text-sm font-medium">
                 {requests.filter(r => r.status === 'pending').length} Pending
               </span>
             </span>
+            <div className="flex items-center gap-2">
+              <select
+                value={reportMonth}
+                onChange={(e) => setReportMonth(parseInt(e.target.value))}
+                className="border rounded-md p-2"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                value={reportYear}
+                onChange={(e) => setReportYear(parseInt(e.target.value))}
+                className="border rounded-md p-2 w-20"
+                placeholder="Year"
+              />
+              <button
+                onClick={generateReport}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                Download PDF Report
+              </button>
+            </div>
           </div>
         </div>
 
@@ -214,7 +268,7 @@ const RescheduleRequests = () => {
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
                         }`}>
-                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                         </span>
                       )}
                     </div>
