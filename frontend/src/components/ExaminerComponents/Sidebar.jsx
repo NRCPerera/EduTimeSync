@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, Calendar, Users, BarChart3, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function Sidebar({ activeTab, setActiveTab }) {
   const navItems = [
@@ -9,6 +10,7 @@ function Sidebar({ activeTab, setActiveTab }) {
     { id: 'insights', name: 'Insights', icon: BarChart3 },
     { id: 'settings', name: 'Settings', icon: Settings },
   ];
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col h-full">
@@ -18,14 +20,14 @@ function Sidebar({ activeTab, setActiveTab }) {
       <div className="h-0 flex-1 flex flex-col overflow-y-auto">
         <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) => (
-            <a
+            <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`${
                 activeTab === item.id
                   ? 'bg-indigo-800 text-white'
                   : 'text-indigo-100 hover:bg-indigo-600'
-              } group flex items-center px-2 py-2 text-base font-medium rounded-md cursor-pointer transition-colors duration-150`}
+              } group flex items-center px-2 py-2 text-base font-medium rounded-md w-full cursor-pointer transition-colors duration-150`}
             >
               <item.icon
                 className={`${
@@ -33,13 +35,13 @@ function Sidebar({ activeTab, setActiveTab }) {
                 } mr-3 flex-shrink-0 h-6 w-6`}
               />
               {item.name}
-            </a>
+            </button>
           ))}
         </nav>
       </div>
       <div className="flex-shrink-0 flex border-t border-indigo-800 p-4">
-        <a
-          href="#"
+        <button
+          onClick={() => navigate('/sign-in')}
           className="flex-shrink-0 w-full group block text-indigo-100 hover:bg-indigo-600 px-2 py-2 rounded-md"
         >
           <div className="flex items-center">
@@ -50,7 +52,7 @@ function Sidebar({ activeTab, setActiveTab }) {
               <p className="text-base font-medium">Sign Out</p>
             </div>
           </div>
-        </a>
+        </button>
       </div>
     </div>
   );

@@ -23,6 +23,12 @@ function ExaminerDashBoard() {
     setShowNotifications(!showNotifications);
   };
 
+  // Debug activeTab changes
+  const handleSetActiveTab = (tabId) => {
+    console.log('Setting activeTab to:', tabId);
+    setActiveTab(tabId);
+  };
+
   // Fetch examiner name from backend
   useEffect(() => {
     const fetchExaminerName = async () => {
@@ -62,7 +68,7 @@ function ExaminerDashBoard() {
           </button>
         </div>
         <div className="flex-1 flex flex-col overflow-y-auto">
-          <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <Sidebar activeTab={activeTab} setActiveTab={handleSetActiveTab} />
         </div>
       </div>
 
@@ -119,26 +125,28 @@ function ExaminerDashBoard() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               <div className="mb-6">
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">Examiner Dashboard</h1>
-                <div className="flex flex-col space-y-4">
-                  <div className="w-full">
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                      <div className="flex items-center mb-4">
-                        <Calendar className="h-5 w-5 mr-2 text-indigo-500" />
-                        <h2 className="text-lg font-semibold text-gray-800">Today's Agenda</h2>
+                {activeTab === 'dashboard' && (
+                  <div className="flex flex-col space-y-4">
+                    <div className="w-full">
+                      <div className="bg-white rounded-lg shadow-md p-6">
+                        <div className="flex items-center mb-4">
+                          <Calendar className="h-5 w-5 mr-2 text-indigo-500" />
+                          <h2 className="text-lg font-semibold text-gray-800">Today's Agenda</h2>
+                        </div>
+                        <TodayAgenda />
                       </div>
-                      <TodayAgenda />
+                    </div>
+                    <div className="w-full">
+                      <div className="bg-white rounded-lg shadow-md p-4">
+                        <div className="flex items-center mb-2">
+                          <BarChart3 className="h-5 w-5 mr-2 text-indigo-500" />
+                          <h2 className="text-lg font-semibold text-gray-800">Smart Insights</h2>
+                        </div>
+                        <SmartInsights />
+                      </div>
                     </div>
                   </div>
-                  <div className="w-full">
-                    <div className="bg-white rounded-lg shadow-md p-4">
-                      <div className="flex items-center mb-2">
-                        <BarChart3 className="h-5 w-5 mr-2 text-indigo-500" />
-                        <h2 className="text-lg font-semibold text-gray-800">Smart Insights</h2>
-                      </div>
-                      <SmartInsights />
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
@@ -163,6 +171,21 @@ function ExaminerDashBoard() {
               {activeTab === 'evaluation' && (
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <EvaluationZone />
+                </div>
+              )}
+              {activeTab === 'insights' && (
+                <div className="bg-white rounded-lg shadow-md p-4">
+                  <div className="flex items-center mb-2">
+                    <BarChart3 className="h-5 w-5 mr-2 text-indigo-500" />
+                    <h2 className="text-lg font-semibold text-gray-800">Smart Insights</h2>
+                  </div>
+                  <SmartInsights />
+                </div>
+              )}
+              {activeTab === 'settings' && (
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
+                  <p className="mt-2 text-gray-600">Settings page is under development.</p>
                 </div>
               )}
             </div>
