@@ -1,109 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ClipboardList, Search, CheckCircle, Edit, FileText, Download, Upload } from 'lucide-react';
 
 function EvaluationZone() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedEvent, setSelectedEvent] = useState('event1');
+  const [selectedEvent, setSelectedEvent] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'ascending' });
   const [feedbackModal, setFeedbackModal] = useState({ isOpen: false, studentId: null, currentFeedback: '' });
+  const [allStudents, setAllStudents] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const examinerId = 'YOUR_EXAMINER_ID'; // Replace with actual examiner ID (e.g., from auth context)
 
-  // Sample data - in a real app, this would come from an API
-  const events = [
-    { id: 'event1', name: 'Final Year Project Presentations (CS4099)' },
-    { id: 'event2', name: 'Web Development Showcase (CS3050)' },
-    { id: 'event3', name: 'Machine Learning Project Defense (CS4045)' },
-  ];
-  
-  const students = [
-    { 
-      id: 1, 
-      name: 'Alex Chen', 
-      studentId: 'S1234567', 
-      topic: 'Machine Learning in Healthcare', 
-      meetingTime: '2025-05-15T09:00:00', 
-      submissionStatus: 'submitted',
-      grade: null,
-      feedback: '',
-      completionStatus: 'pending',
-      eventId: 'event1'
-    },
-    { 
-      id: 2, 
-      name: 'Maria Garcia', 
-      studentId: 'S2345678', 
-      topic: 'Sustainable Architecture Design Principles', 
-      meetingTime: '2025-05-15T10:30:00', 
-      submissionStatus: 'submitted',
-      grade: 85,
-      feedback: 'Excellent work on the literature review. The implementation could use more testing.',
-      completionStatus: 'completed',
-      eventId: 'event1'
-    },
-    { 
-      id: 3, 
-      name: 'James Wilson', 
-      studentId: 'S3456789', 
-      topic: 'Economic Impact Analysis', 
-      meetingTime: '2025-05-16T11:00:00', 
-      submissionStatus: 'not submitted',
-      grade: null,
-      feedback: '',
-      completionStatus: 'pending',
-      eventId: 'event1'
-    },
-    { 
-      id: 4, 
-      name: 'Sarah Johnson', 
-      studentId: 'S4567890', 
-      topic: 'Quantum Computing Applications', 
-      meetingTime: '2025-05-16T14:00:00', 
-      submissionStatus: 'submitted',
-      grade: 92,
-      feedback: 'Outstanding research and presentation. Clear understanding of complex concepts.',
-      completionStatus: 'completed',
-      eventId: 'event1'
-    },
-    { 
-      id: 5, 
-      name: 'Raj Patel', 
-      studentId: 'S5678901', 
-      topic: 'Renewable Energy Storage', 
-      meetingTime: '2025-05-17T09:30:00', 
-      submissionStatus: 'submitted',
-      grade: null,
-      feedback: '',
-      completionStatus: 'pending',
-      eventId: 'event1'
-    },
-    { 
-      id: 6, 
-      name: 'Emma Wright', 
-      studentId: 'S6789012', 
-      topic: 'User Experience in Mobile Apps', 
-      meetingTime: '2025-05-22T10:00:00', 
-      submissionStatus: 'submitted',
-      grade: 78,
-      feedback: 'Good research questions but methodology needs improvement.',
-      completionStatus: 'completed',
-      eventId: 'event2'
-    },
-    { 
-      id: 7, 
-      name: 'David Kim', 
-      studentId: 'S7890123', 
-      topic: 'Blockchain for Supply Chain', 
-      meetingTime: '2025-06-05T13:30:00', 
-      submissionStatus: 'submitted',
-      grade: null,
-      feedback: '',
-      completionStatus: 'pending',
-      eventId: 'event3'
-    },
-  ];
+  // Fetch data from backend on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/evaluations/students?examinerId=${examinerId}`);
+        const data = await response.json();
+        // Map backend data to frontend student objects
+        setAllStudents(data.map(backendStudent => ({
+          id: backendStudent.id,
+          name: backendStudent.name,
+          studentId: backendStudent.id, // Use id as studentId (backend doesn't provide 'S1234567')
+          topic: 'N/A', // Not available from backend
+          meetingTime: null, // Not available from backend
+          submissionStatus: 'submitted', // Assume all are submitted (backend doesn't provide this)
+          grade: backendStudent.grade === '' ? null : Number(backendStudent.grade),
+          feedback: backendStudent.presentation || '',
+          completionStatus: backendStudent.evaluated ? 'completed' : 'pending',
+          eventId: backendStudent.module
+        })));
+        // Extract unique modules to create events
+        const uniqueModules = [...new Set(data.map(s => s.module))];
+        setEvents(uniqueModules.map(module => ({ id: module, name: module })));
+        // Set default selected event
+        if (uniqueModules.length > 0) {
+          setSelectedEvent(uniqueModules[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [examinerId]);
 
-  const filteredStudents = students
+  // Filter and sort students
+  const filteredStudents = allStudents
     .filter(student => student.eventId === selectedEvent)
-    .filter(student => 
+    .filter(student =>
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.topic.toLowerCase().includes(searchTerm.toLowerCase())
@@ -119,6 +66,7 @@ function EvaluationZone() {
     return 0;
   });
 
+  // Helper functions
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -128,12 +76,13 @@ function EvaluationZone() {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'Not scheduled';
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   const getSubmissionStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'submitted':
         return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Submitted</span>;
       case 'not submitted':
@@ -144,7 +93,7 @@ function EvaluationZone() {
   };
 
   const getCompletionStatusBadge = (status) => {
-    switch(status) {
+    switch (status) {
       case 'completed':
         return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Completed</span>;
       case 'pending':
@@ -163,12 +112,13 @@ function EvaluationZone() {
   };
 
   const updateStudentGrade = (studentId, newGrade) => {
-    // In a real app, this would update the API
     console.log(`Updating grade for student ${studentId} to ${newGrade}`);
+    // In a real app, this would update the backend via API
   };
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Header */}
       <div className="px-4 py-5 sm:px-6 bg-indigo-600">
         <h3 className="text-lg leading-6 font-medium text-white flex items-center">
           <ClipboardList className="mr-2 h-5 w-5" />
@@ -179,6 +129,7 @@ function EvaluationZone() {
         </p>
       </div>
 
+      {/* Search and Event Select */}
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
         <div className="flex flex-wrap justify-between items-center gap-2">
           <div className="w-full md:w-auto">
@@ -195,7 +146,6 @@ function EvaluationZone() {
               />
             </div>
           </div>
-          
           <div className="w-full md:w-auto flex items-center mt-2 md:mt-0">
             <span className="text-sm font-medium text-gray-700 mr-2">Event:</span>
             <div className="relative inline-block w-60">
@@ -219,39 +169,36 @@ function EvaluationZone() {
           </div>
         </div>
       </div>
-      
+
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => requestSort('name')}
               >
                 <div className="flex items-center">
                   Student
                   {sortConfig.key === 'name' && (
-                    <span className="ml-1">
-                      {sortConfig.direction === 'ascending' ? '↓' : '↑'}
-                    </span>
+                    <span className="ml-1">{sortConfig.direction === 'ascending' ? '↓' : '↑'}</span>
                   )}
                 </div>
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Topic
               </th>
-              <th 
-                scope="col" 
+              <th
+                scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => requestSort('meetingTime')}
               >
                 <div className="flex items-center">
                   Meeting Time
                   {sortConfig.key === 'meetingTime' && (
-                    <span className="ml-1">
-                      {sortConfig.direction === 'ascending' ? '↓' : '↑'}
-                    </span>
+                    <span className="ml-1">{sortConfig.direction === 'ascending' ? '↓' : '↑'}</span>
                   )}
                 </div>
               </th>
@@ -282,10 +229,10 @@ function EvaluationZone() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{student.topic}</div>
+                    <div className="text-sm text-gray-900">{student.topic || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(student.meetingTime)}
+                    {student.meetingTime ? formatDate(student.meetingTime) : 'Not scheduled'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getSubmissionStatusBadge(student.submissionStatus)}
@@ -297,7 +244,7 @@ function EvaluationZone() {
                         min="0"
                         max="100"
                         className="max-w-[70px] focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                        value={student.grade || ''}
+                        value={student.grade !== null ? student.grade : ''}
                         onChange={(e) => updateStudentGrade(student.id, e.target.value)}
                         placeholder="-"
                       />
@@ -310,7 +257,7 @@ function EvaluationZone() {
                     <div className="flex space-x-2">
                       {student.submissionStatus === 'submitted' && (
                         <>
-                          <button 
+                          <button
                             className="text-indigo-600 hover:text-indigo-900"
                             onClick={() => openFeedbackModal(student)}
                           >
@@ -338,12 +285,12 @@ function EvaluationZone() {
           </tbody>
         </table>
       </div>
-      
+
+      {/* Footer */}
       <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
         <span className="text-sm text-gray-700">
           Showing <span className="font-medium">{sortedStudents.length}</span> students
         </span>
-        
         <div className="flex space-x-3">
           <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             <Download className="h-4 w-4 mr-1" />
@@ -355,14 +302,15 @@ function EvaluationZone() {
           </button>
         </div>
       </div>
-      
+
+      {/* Feedback Modal */}
       {feedbackModal.isOpen && (
         <div className="fixed z-10 inset-0 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true"></span>
             <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
               <div>
                 <div className="mt-3 text-center sm:mt-5">
@@ -376,7 +324,7 @@ function EvaluationZone() {
                       className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       placeholder="Enter detailed feedback for the student..."
                       value={feedbackModal.currentFeedback}
-                      onChange={(e) => setFeedbackModal({...feedbackModal, currentFeedback: e.target.value})}
+                      onChange={(e) => setFeedbackModal({ ...feedbackModal, currentFeedback: e.target.value })}
                     />
                   </div>
                 </div>
@@ -385,14 +333,14 @@ function EvaluationZone() {
                 <button
                   type="button"
                   className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-                  onClick={() => setFeedbackModal({...feedbackModal, isOpen: false})}
+                  onClick={() => setFeedbackModal({ ...feedbackModal, isOpen: false })}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-                  onClick={() => setFeedbackModal({...feedbackModal, isOpen: false})}
+                  onClick={() => setFeedbackModal({ ...feedbackModal, isOpen: false })}
                 >
                   Save Feedback
                 </button>
