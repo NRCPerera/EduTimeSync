@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ExaminerHeader from '../../components/ExaminerHeader';
 
 const ExaminerRescheduleRequests = () => {
   const navigate = useNavigate();
@@ -86,7 +85,6 @@ const ExaminerRescheduleRequests = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ExaminerHeader />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Reschedule Requests</h2>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, CheckCircle, XCircle, AlertCircle, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import LICHeader from '../../components/LICHeader';
+import LICNavbar from '../../components/LicComponents/LicNavbar';
 
 const RescheduleRequests = () => {
   const navigate = useNavigate();
@@ -181,9 +181,9 @@ const RescheduleRequests = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <LICHeader />
+      <LICNavbar />
       
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 mt-20">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Reschedule Requests</h1>
