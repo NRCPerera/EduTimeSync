@@ -4,6 +4,7 @@ import LICHeader from '../../components/LICHeader';
 import EventForm from '../../components/LicComponents/EventForm';
 import EventList from '../../components/LicComponents/EventList';
 import Notification from '../../components/LicComponents/Notification';
+import LICNavbar from '../../components/LicComponents/LicNavbar';
 
 const ScheduleEvent = () => {
   const [events, setEvents] = useState([]);
@@ -84,8 +85,8 @@ const ScheduleEvent = () => {
 
   return (
     <div>
-      <LICHeader />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
+      <LICNavbar />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4 sm:px-6 lg:px-8 mt-20">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-indigo-800 mb-2">Event Scheduler</h1>

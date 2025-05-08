@@ -41,11 +41,11 @@ function ExaminerHeader({ activeTab, setActiveTab }) {
   }, []);
 
   const navItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'availability', name: 'Availability', icon: Calendar },
-    { id: 'evaluation', name: 'Evaluation', icon: Users },
-    { id: 'insights', name: 'Insights', icon: BarChart3 },
-    { id: 'settings', name: 'Settings', icon: Settings },
+    { id: 'dashboard', name: 'Dashboard' },
+    { id: 'availability', name: 'Availability' },
+    { id: 'evaluation', name: 'Evaluation'},
+    { id: 'insights', name: 'Insights' },
+    { id: 'settings', name: 'Settings' },
   ];
 
   return (
@@ -54,8 +54,7 @@ function ExaminerHeader({ activeTab, setActiveTab }) {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <GraduationCap className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-xl">EduTimeSync</span>
+            <span className="font-bold text-xl ml-15">EduTimeSync</span>
           </div>
 
           {/* Navigation */}
@@ -70,7 +69,6 @@ function ExaminerHeader({ activeTab, setActiveTab }) {
                     : 'text-gray-600 hover:text-blue-600'
                 }`}
               >
-                <item.icon className="h-5 w-5 mr-2" />
                 <span className="font-medium">{item.name}</span>
               </button>
             ))}
@@ -78,7 +76,7 @@ function ExaminerHeader({ activeTab, setActiveTab }) {
               onClick={() => navigate('/sign-in')}
               className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
             >
-              <LogOut className="h-5 w-5 mr-2" />
+              
               <span className="font-medium">Sign Out</span>
             </button>
           </nav>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, ChevronLeft, ChevronRight, CalendarRange, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ExaminerHeader from '../../components/ExaminerHeader';
+import ExaminerHeader from '../../components/ExaminerComponents/ExaminerHeader';
 import RescheduleForm from '../../components/RescheduleForm';
 
 const ExaminerSchedule = () => {

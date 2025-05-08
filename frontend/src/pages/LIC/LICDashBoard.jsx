@@ -1,45 +1,9 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
-import LICHeader from '../../components/LICHeader';
-
-const API_URL = 'http://localhost:5000/api';
-
-// Calendar Day Component
-const CalendarDay = ({ date, events, isToday }) => {
-  const dayEvents = events.filter(event => {
-    try {
-      const eventDate = new Date(event.startDate);
-      return format(eventDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
-    } catch {
-      return false;
-    }
-  });
-
-  return (
-    <div 
-      className={`min-h-[80px] p-2 border border-gray-200 ${
-        isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'
-      }`}
-    >
-      <div className="font-medium text-sm text-right mb-1">
-        {format(date, 'd')}
-      </div>
-      <div className="space-y-1">
-        {dayEvents.map((event, i) => (
-          <div 
-            key={i}
-            style={{ backgroundColor: event.color }}
-            className="text-xs p-1 rounded truncate cursor-pointer hover:opacity-80"
-            title={`${event.title} - ${event.module || 'No module'}`}
-          >
-            {event.title}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay } from 'date-fns';
+import LICNavbar from '../../components/LicComponents/LicNavbar';
+import FullCalendar from '../../components/LicComponents/FullCalendar';
+import dayGridPlugin from '@fullcalendar/daygrid';
 
 // Examiner List Component
 const ExaminerList = ({ examiners, onAssign }) => {
@@ -51,10 +15,10 @@ const ExaminerList = ({ examiners, onAssign }) => {
           <p className="text-gray-500 text-center py-4">No examiners available</p>
         ) : (
           examiners.map((examiner, index) => (
-            <div key={index} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg">
+            <div key={index} className="flex justifyshe justify-between items-center p-3 hover:bg-gray-100 rounded-lg">
               <div>
                 <p className="font-medium">{examiner.name}</p>
-                <p className="text-sm text-gray-500">{examiner.email}</p>
+                <p className="text-sm text-gray-800">{examiner.email}</p>
               </div>
               <button
                 onClick={() => onAssign(examiner._id)}
@@ -130,41 +94,35 @@ const LICDashBoard = () => {
   const fetchUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      
       if (!token) {
         throw new Error('No authentication token found. Please sign in.');
       }
-      
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-auth-token': token
-      };
-      
-      const response = await fetch(`${API_URL}/users/me`, {
+
+      const response = await fetch('http://localhost:5000/api/users/me', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token
+          'x-auth-token': token,
         },
-        credentials: 'include'
+        credentials: 'include',
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || `Authentication failed (Status: ${response.status})`);
       }
-      
+
       if (data.user?.role !== 'LIC') {
         throw new Error(`Access restricted: Role is ${data.user?.role || 'unknown'}, expected LIC`);
       }
-      
+
       setUser(data.user);
       setAuthError('');
     } catch (err) {
       console.error('Fetch user error:', err.message);
       setAuthError(err.message);
-      
+
       if (err.message.includes('not valid') || err.message.includes('expired')) {
         localStorage.removeItem('token');
       }
@@ -173,54 +131,68 @@ const LICDashBoard = () => {
     }
   }, []);
 
-  // Fetch events
+  // Fetch events and format for FullCalendar
   const fetchEvents = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for events fetch');
-      
-      const response = await fetch(`${API_URL}/event/get-events`, {
+
+      const response = await fetch('http://localhost:5000/api/event/get-events', {
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token
-        }
+          'x-auth-token': token,
+        },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to fetch events (Status: ${response.status})`);
       }
-      
+
       const data = await response.json();
-      setEvents(data.map(event => ({
-        ...event,
-        color: event.status === 'pending' ? '#FDE7E8' : 
-               event.status === 'confirmed' ? '#E5F6FD' : 
-               event.status === 'completed' ? '#E3F7E8' : '#F9F0FF'
-      })));
+      const currentDate = new Date();
+
+      // Filter events relevant to the current user
+      const userEvents = data.filter(event =>
+        event.createdBy === user?._id || (event.examinerIds && event.examinerIds.some(examiner => examiner._id === user?._id))
+      );
+
+      // Format events for FullCalendar
+      const formattedEvents = userEvents.map(event => ({
+        title: event.title,
+        start: event.startDate,
+        end: event.endDate,
+        backgroundColor: event.status === 'pending' ? '#FEF9C3' : new Date(event.startDate) >= currentDate ? '#E5F6FD' : '#FFFFFF',
+        extendedProps: {
+          status: event.status,
+          module: event.module,
+        },
+      }));
+
+      setEvents(formattedEvents);
     } catch (err) {
       setError(`Events error: ${err.message}`);
     }
-  }, []);
+  }, [user]);
 
   // Fetch examiners
   const fetchExaminers = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for examiners fetch');
-      
-      const response = await fetch(`${API_URL}/event/get-examiners`, {
+
+      const response = await fetch('http://localhost:5000/api/event/get-examiners', {
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token
-        }
+          'x-auth-token': token,
+        },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to fetch examiners (Status: ${response.status})`);
       }
-      
+
       const data = await response.json();
       setExaminers(data || []);
     } catch (err) {
@@ -233,27 +205,30 @@ const LICDashBoard = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for notifications fetch');
-      
+
       const response = await fetch(`${API_URL}/rescheduleRequest/all`, {
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token
-        }
+          'x-auth-token': token,
+        },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to fetch notifications (Status: ${response.status})`);
       }
-      
+
       const data = await response.json();
-      
-      // Transform the reschedule requests into notification format
-      setNotifications(data.data ? data.data.map(req => ({
-        title: `Reschedule request for ${req.scheduleId?.module || 'exam'} by ${req.examinerId?.name || 'Examiner'}`,
-        time: req.createdAt ? format(new Date(req.createdAt), 'PPP p') : 'Unknown time',
-        id: req._id
-      })) : []);
+
+      setNotifications(
+        data.data
+          ? data.data.map(req => ({
+              title: `Reschedule request for ${req.scheduleId?.module || 'exam'} by ${req.examinerId?.name || 'Examiner'}`,
+              time: req.createdAt ? format(new Date(req.createdAt), 'PPP p') : 'Unknown time',
+              id: req._id,
+            }))
+          : []
+      );
     } catch (err) {
       setError(`Notifications error: ${err.message}`);
     }
@@ -264,19 +239,19 @@ const LICDashBoard = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for modules fetch');
-      
+
       const response = await fetch(`${API_URL}/module/all`, {
         headers: {
           'Content-Type': 'application/json',
-          'x-auth-token': token
-        }
+          'x-auth-token': token,
+        },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to fetch modules (Status: ${response.status})`);
       }
-      
+
       const data = await response.json();
       setModules(data.data || []);
     } catch (err) {
@@ -291,12 +266,12 @@ const LICDashBoard = () => {
     const maxRetries = 3;
 
     const init = async () => {
-      if (!user && mounted) {  
+      if (!user && mounted) {
         while (mounted && retryCount < maxRetries) {
           try {
             await fetchUser();
             if (user) break;
-            
+
             retryCount++;
             console.log(`Retry ${retryCount}/${maxRetries} for authentication`);
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -321,13 +296,7 @@ const LICDashBoard = () => {
   // Fetch data after user is authenticated
   useEffect(() => {
     if (user) {
-      // Fetch all data in parallel to improve loading time
-      Promise.all([
-        fetchEvents(),
-        fetchExaminers(),
-        fetchNotifications(),
-        fetchModules()
-      ]).catch(err => {
+      Promise.all([fetchEvents(), fetchExaminers(), fetchNotifications(), fetchModules()]).catch(err => {
         console.error('Error fetching dashboard data:', err);
       });
     }
@@ -338,32 +307,15 @@ const LICDashBoard = () => {
     const currentDate = new Date();
     const lastMonthDate = new Date();
     lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
-    
-    // Calculate upcoming events (events in the future)
-    const upcomingEvents = events.filter(event => {
-      try {
-        return new Date(event.startDate) >= currentDate;
-      } catch {
-        return false;
-      }
-    }).length;
-    
-    // Count active examiners
+
+    const upcomingEventsCount = events.filter(event => new Date(event.start) >= currentDate).length;
     const activeExaminers = examiners.length;
-    
-    // Count pending reviews (notifications/reschedule requests)
     const pendingReviews = notifications.length;
-    
-    // Calculate success rate (completed events / total events)
-    const completedEvents = events.filter(e => e.status === 'completed').length;
+    const completedEvents = events.filter(event => event.extendedProps.status === 'completed').length;
     const successRate = events.length ? Math.round((completedEvents / events.length) * 100) : 0;
-    
-    // For trends, we would ideally calculate the difference from the previous month
-    // But since we don't have historical data, we'll use placeholder values
-    // In a real application, you would fetch historical data or calculate trends properly
-    
+
     setStats([
-      { title: 'Upcoming Events', value: upcomingEvents, icon: '📅', trend: 5 },
+      { title: 'Upcoming Events', value: upcomingEventsCount, icon: '📅', trend: 5 },
       { title: 'Active Examiners', value: activeExaminers, icon: '👥', trend: 10 },
       { title: 'Pending Reviews', value: pendingReviews, icon: '📝', trend: pendingReviews > 3 ? -5 : 0 },
       { title: 'Success Rate', value: `${successRate}%`, icon: '⭐', trend: 2 },
@@ -372,25 +324,9 @@ const LICDashBoard = () => {
 
   // Handle examiner assignment
   const handleAssignExaminer = async (examinerId) => {
-    // This would typically involve selecting an event and then assigning the examiner
-    // Since the UI doesn't currently support selecting an event, we'll show an error message
     setError('Please select an event before assigning an examiner.');
   };
 
-  // Month navigation for calendar
-  const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-
-  // Generate calendar days for current month
-  const start = startOfMonth(currentMonth);
-  const end = endOfMonth(currentMonth);
-  const days = eachDayOfInterval({ start, end });
-
-  // Handle event creation success
-  const handleEventCreated = () => {
-    fetchEvents();
-    setIsEventFormOpen(false);
-  };
 
   // Handle authentication failure
   if (!loading && authError) {
@@ -424,8 +360,8 @@ const LICDashBoard = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <LICHeader />
+<div className="bg-gray-100 min-h-screen">
+      <LICNavbar />
       <div className="p-8">
         {loading ? (
           <div className="flex items-center justify-center min-h-[400px]">
@@ -433,37 +369,19 @@ const LICDashBoard = () => {
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-center mb-8 mt-20">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Welcome, {user?.name || 'LIC'}</h1>
+                <h1 className="text-2xl font-bold  text-gray-800">Welcome, {user?.name || 'LIC'}</h1>
                 <p className="text-gray-500">Lead Instructor Coordinator</p>
               </div>
               <div className="flex space-x-4">
-                <button
-                  onClick={() => setIsEventFormOpen(true)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  + Create New Event
-                </button>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('token');
-                    window.location.href = '/sign-in';
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Sign Out
-                </button>
               </div>
             </div>
 
             {error && (
               <div className="mb-8 p-4 bg-red-100 text-red-700 rounded-lg flex justify-between items-center">
                 {error}
-                <button
-                  onClick={() => setError('')}
-                  className="text-sm underline"
-                >
+                <button onClick={() => setError('')} className="text-sm underline">
                   Dismiss
                 </button>
               </div>
@@ -477,29 +395,13 @@ const LICDashBoard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Event Calendar</h2>
-                  <div className="flex space-x-2">
-                    <button onClick={handlePrevMonth} className="p-2 hover:bg-gray-100 rounded">◀</button>
-                    <span className="p-2 font-medium">{format(currentMonth, 'MMMM yyyy')}</span>
-                    <button onClick={handleNextMonth} className="p-2 hover:bg-gray-100 rounded">▶</button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
-                      {day}
-                    </div>
-                  ))}
-                  {days.map((day, index) => (
-                    <CalendarDay
-                      key={index}
-                      date={day}
-                      events={events}
-                      isToday={format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')}
-                    />
-                  ))}
-                </div>
+                <h2 className="text-xl font-semibold mb-4">Event Calendar</h2>
+                <FullCalendar
+                  plugins={[dayGridPlugin]}
+                  initialView="dayGridMonth"
+                  events={events}
+                  height="auto"
+                />
               </div>
 
               <div className="space-y-8">
@@ -510,8 +412,6 @@ const LICDashBoard = () => {
           </>
         )}
       </div>
-
-
     </div>
   );
 };

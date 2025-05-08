@@ -37,7 +37,7 @@ function ExaminerDashBoard() {
             'x-auth-token': token,
             'Content-Type': 'application/json'
           }
-        }); console.log('Response:', response);
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch examiner profile');
         }
