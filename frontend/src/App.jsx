@@ -14,7 +14,7 @@ import FilterAvailabilityPage from './pages/LIC/FilterAvailabilityPage';
 import EventsPage from './pages/LIC/Evetspage';
 import ExaminerAvailability from './pages/Examiner/ExaminerAvailability';
 import AssignEvents from './pages/Examiner/AssignEvents';
-import StdEvalutation from './pages/Examiner/StdEvalutation';
+import StdEvalutation from './pages/Examiner/EvaluatedSchedules';
 import UserManagement from './pages/Admin/UserManagement';
 import ExaminerRescheduleRequests from './pages/Examiner/ExaminerRescheduleRequests';
 import CreateModule from './pages/Admin/CreateModule';

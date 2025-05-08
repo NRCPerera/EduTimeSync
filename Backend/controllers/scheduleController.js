@@ -3,6 +3,7 @@ const ModuleRegistration = require('../models/ModuleRegistration');
 const Event = require('../models/Event');
 const User = require('../models/user');
 const axios = require('axios');
+const Evaluation = require('../models/Evaluation');
 
 exports.getExaminerSchedules = async (req, res) => {
   try {
@@ -24,15 +25,32 @@ exports.getExaminerSchedules = async (req, res) => {
     }
 
     const schedules = await Schedule.find(query)
-      .populate('studentId', 'email')
+      .populate('studentId', 'name email')
       .populate('examinerId', 'email')
+      .populate('eventId', 'name') // Populate eventId, assuming 'name' is the event name field
       .lean();
 
-    const formattedSchedules = schedules.map(schedule => ({
-      ...schedule,
-      startTime: schedule.startTime.toISOString(),
-      endTime: schedule.endTime.toISOString(),
-    }));
+    const formattedSchedules = await Promise.all(
+      schedules.map(async (schedule) => {
+        const evaluation = await Evaluation.findOne({
+          scheduleId: schedule._id,
+          studentId: schedule.studentId._id,
+          examinerId: schedule.examinerId._id,
+        }).lean();
+
+        return {
+          ...schedule,
+          startTime: schedule.startTime.toISOString(),
+          endTime: schedule.endTime.toISOString(),
+          hasEvaluation: !!evaluation,
+          evaluation: evaluation ? {
+            grade: evaluation.grade,
+            presentation: evaluation.presentation || '',
+          } : null,
+          eventName: schedule.eventId?.name || schedule.module, // Fallback to module if eventId.name is unavailable
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,

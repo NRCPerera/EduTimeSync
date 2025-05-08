@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, ChevronLeft, ChevronRight, CalendarRange, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, Users, Video, ChevronLeft, ChevronRight, CalendarRange, AlertCircle, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ExaminerHeader from '../../components/ExaminerHeader';
 import RescheduleForm from '../../components/RescheduleForm';
+import EvaluationForm from './EvaluationForm';
 
 const ExaminerSchedule = () => {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [isEvaluationModalOpen, setIsEvaluationModalOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,20 +20,19 @@ const ExaminerSchedule = () => {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    fetchSchedules();
-    fetchRescheduleRequests();
-  }, [currentMonth]);
-
-  const fetchSchedules = async () => {
-    setLoading(true);
-    setError(null);
-
     if (!token) {
       setError('Please log in to view your schedules');
       setLoading(false);
       navigate('/sign-in');
       return;
     }
+    fetchSchedules();
+    fetchRescheduleRequests();
+  }, [currentMonth, token, navigate]);
+
+  const fetchSchedules = async () => {
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(
@@ -44,11 +45,13 @@ const ExaminerSchedule = () => {
       );
 
       const data = await response.json();
-      if (!response.ok) {
+      if (!data.success) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
-      setSchedules(data.data || []);
+      // Filter schedules to show only those without evaluations
+      const unevaluatedSchedules = data.data.filter(schedule => !schedule.hasEvaluation);
+      setSchedules(unevaluatedSchedules || []);
     } catch (err) {
       setError(err.message || 'Failed to fetch your schedules');
       console.error('Fetch error:', err);
@@ -69,7 +72,7 @@ const ExaminerSchedule = () => {
       );
 
       const data = await response.json();
-      if (!response.ok) {
+      if (!data.success) {
         console.error('Failed to fetch reschedule requests:', data.error);
         return;
       }
@@ -100,22 +103,41 @@ const ExaminerSchedule = () => {
       return;
     }
 
-    // Check if there's an existing pending reschedule request
     if (hasExistingRescheduleRequest(exam._id)) {
       setError('A reschedule request already exists for this exam. Please check your existing requests or contact support.');
-      // Scroll to the error message
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     setSelectedExam(exam);
     setIsRescheduleModalOpen(true);
-    setModalError(null); // Clear any previous modal errors
+    setModalError(null);
+  };
+
+  const handleEvaluate = (exam) => {
+    if (!exam || !exam._id) {
+      setError('Invalid exam data. Cannot evaluate.');
+      return;
+    }
+
+    if (!exam.examinerId?._id) {
+      setError('Examiner ID is missing. Please contact support.');
+      return;
+    }
+
+    if (exam.hasEvaluation) {
+      setError('This schedule has already been evaluated.');
+      return;
+    }
+
+    setSelectedExam(exam);
+    setIsEvaluationModalOpen(true);
+    setModalError(null);
   };
 
   const handleSubmitReschedule = async (formData) => {
     try {
-      setModalError(null); // Clear previous errors
+      setModalError(null);
       
       const response = await fetch('http://localhost:5000/api/rescheduleRequest/add', {
         method: 'POST',
@@ -136,29 +158,31 @@ const ExaminerSchedule = () => {
 
       const data = await response.json();
       
-      if (!response.ok) {
+      if (!data.success) {
         if (data.error === 'A reschedule request already exists for this schedule') {
           throw new Error('A reschedule request already exists for this exam. Please check your existing requests or contact support.');
         }
         throw new Error(data.error || 'Failed to submit reschedule request');
       }
 
-      // Success - close modal and refresh data
       setIsRescheduleModalOpen(false);
       setSelectedExam(null);
       setError(null);
       
-      // Refresh both schedules and reschedule requests
       fetchSchedules();
       fetchRescheduleRequests();
       
-      // Show success message
       alert('Reschedule request submitted successfully!');
     } catch (err) {
-      // Show error inside the modal
       setModalError(err.message);
       console.error('Reschedule error:', err);
     }
+  };
+
+  const handleSubmitEvaluation = () => {
+    fetchSchedules(); // Refresh schedules after evaluation
+    setIsEvaluationModalOpen(false);
+    setSelectedExam(null);
   };
 
   const getExamStatus = (exam) => {
@@ -206,7 +230,7 @@ const ExaminerSchedule = () => {
           {loading ? (
             <div className="p-6 text-center text-gray-600">Loading your schedules...</div>
           ) : schedules.length === 0 ? (
-            <div className="p-6 text-center text-gray-600">No schedules found for this month</div>
+            <div className="p-6 text-center text-gray-600">No unevaluated schedules found for this month</div>
           ) : (
             <div className="divide-y divide-gray-200">
               {schedules.map((exam) => {
@@ -224,6 +248,17 @@ const ExaminerSchedule = () => {
                         <span className={`px-3 py-1 rounded-full text-sm ${examStatus.className}`}>
                           {examStatus.label}
                         </span>
+                        <button
+                          onClick={() => handleEvaluate(exam)}
+                          disabled={exam.hasEvaluation} // Redundant due to filtering, but included for safety
+                          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors
+                            ${exam.hasEvaluation
+                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                              : 'text-blue-600 bg-blue-50 hover:bg-blue-100'}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                          {exam.hasEvaluation ? 'Evaluated' : 'Evaluate'}
+                        </button>
                         <button
                           onClick={() => handleReschedule(exam)}
                           disabled={hasPendingRequest}
@@ -286,6 +321,19 @@ const ExaminerSchedule = () => {
           }}
           onSubmit={handleSubmitReschedule}
           error={modalError}
+        />
+      )}
+
+      {isEvaluationModalOpen && selectedExam && (
+        <EvaluationForm
+          selectedSchedule={selectedExam}
+          examinerId={selectedExam.examinerId?._id}
+          onClose={() => {
+            setIsEvaluationModalOpen(false);
+            setSelectedExam(null);
+            setModalError(null);
+          }}
+          onSubmit={handleSubmitEvaluation}
         />
       )}
     </div>
