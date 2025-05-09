@@ -45,7 +45,7 @@ function ExaminerHeader({ activeTab, setActiveTab }) {
     { id: 'availability', name: 'Availability' },
     { id: 'evaluation', name: 'Evaluation'},
     { id: 'insights', name: 'Insights' },
-    { id: 'settings', name: 'Settings' },
+    { id: 'schedules', name: 'Schedules' },
   ];
 
   return (

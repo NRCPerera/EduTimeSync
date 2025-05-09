@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 
-const EventCard = ({ event, setSuccess, setError, fetchEvents, navigate }) => {
+const EventCard = ({ event, setSuccess, setError, fetchEvents, navigate, handleGenerateEventReport }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const safeDate = (dateString) => {
@@ -137,7 +138,7 @@ const EventCard = ({ event, setSuccess, setError, fetchEvents, navigate }) => {
 
       if (!response.ok) throw new Error('Failed to update event');
 
-      setSuccess('Event updated relacionamento com sucesso!');
+      setSuccess('Event updated successfully!');
       setIsEditing(false);
       fetchEvents();
     } catch (err) {
@@ -408,6 +409,15 @@ const EventCard = ({ event, setSuccess, setError, fetchEvents, navigate }) => {
               </button>
               <div className="flex space-x-2">
                 <button
+                  onClick={() => handleGenerateEventReport(event._id)}
+                  className={`flex-1 py-2 px-4 rounded-lg text-white font-medium transition-all ${
+                    loading ? 'bg-indigo-400 cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                  disabled={loading}
+                >
+                  Generate Report
+                </button>
+                <button
                   onClick={() => setIsEditing(true)}
                   className={`flex-1 py-2 px-4 rounded-lg text-white font-medium transition-all ${
                     event.scheduleIds.length > 0 || loading
@@ -436,6 +446,15 @@ const EventCard = ({ event, setSuccess, setError, fetchEvents, navigate }) => {
       </div>
     </div>
   );
+};
+
+EventCard.propTypes = {
+  event: PropTypes.object.isRequired,
+  setSuccess: PropTypes.func.isRequired,
+  setError: PropTypes.func.isRequired,
+  fetchEvents: PropTypes.func.isRequired,
+  navigate: PropTypes.func.isRequired,
+  handleGenerateEventReport: PropTypes.func.isRequired,
 };
 
 export default EventCard;

@@ -83,14 +83,55 @@ const ScheduleEvent = () => {
     }
   };
 
+  const handleGenerateEventReport = async (eventId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/sign-in');
+        throw new Error('Please login to continue.');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/event/generate-report/${eventId}`, {
+        headers: {
+          'x-auth-token': token,
+        },
+      });
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/sign-in');
+        throw new Error('Session expired. Please login again.');
+      }
+
+      if (!response.ok) throw new Error('Failed to generate report');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `event_report_${eventId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      setSuccess('Report generated successfully');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div>
       <LICNavbar />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4 sm:px-6 lg:px-8 mt-20">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-bold text-indigo-800 mb-2">Event Scheduler</h1>
-            <p className="text-gray-600">Create and schedule your events efficiently</p>
+          <div className="flex justify-between items-center mb-10">
+            <div className="text-center flex-1">
+              <h1 className="text-4xl font-bold text-indigo-800 mb-2">Event Scheduler</h1>
+              <p className="text-gray-600">Create and schedule your events efficiently</p>
+            </div>
+            
           </div>
 
           <Notification error={error} success={success} />
@@ -147,6 +188,7 @@ const ScheduleEvent = () => {
             setLoading={setLoading}
             fetchEvents={fetchEvents}
             navigate={navigate}
+            handleGenerateEventReport={handleGenerateEventReport}
           />
         </div>
       </div>

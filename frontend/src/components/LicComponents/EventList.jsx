@@ -1,6 +1,16 @@
 import EventCard from './EventCard';
+import PropTypes from 'prop-types';
 
-const EventList = ({ events, loading, setSuccess, setError, setLoading, fetchEvents, navigate }) => {
+const EventList = ({
+  events,
+  loading,
+  setSuccess,
+  setError,
+  setLoading,
+  fetchEvents,
+  navigate,
+  handleGenerateEventReport,
+}) => {
   return (
     <div>
       {loading ? (
@@ -57,6 +67,7 @@ const EventList = ({ events, loading, setSuccess, setError, setLoading, fetchEve
                 setLoading={setLoading}
                 fetchEvents={fetchEvents}
                 navigate={navigate}
+                handleGenerateEventReport={handleGenerateEventReport}
               />
             ))
           )}
@@ -64,6 +75,17 @@ const EventList = ({ events, loading, setSuccess, setError, setLoading, fetchEve
       )}
     </div>
   );
+};
+
+EventList.propTypes = {
+  events: PropTypes.array.isRequired,
+  loading: PropTypes.bool.isRequired,
+  setSuccess: PropTypes.func.isRequired,
+  setError: PropTypes.func.isRequired,
+  setLoading: PropTypes.func.isRequired,
+  fetchEvents: PropTypes.func.isRequired,
+  navigate: PropTypes.func.isRequired,
+  handleGenerateEventReport: PropTypes.func.isRequired,
 };
 
 export default EventList;

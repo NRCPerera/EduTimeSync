@@ -206,7 +206,7 @@ const LICDashBoard = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for notifications fetch');
 
-      const response = await fetch(`${API_URL}/rescheduleRequest/all`, {
+      const response = await fetch(`http://localhost:5000/api/rescheduleRequest/all`, {
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
@@ -240,7 +240,7 @@ const LICDashBoard = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for modules fetch');
 
-      const response = await fetch(`${API_URL}/module/all`, {
+      const response = await fetch(`http://localhost:5000/api/module/all`, {
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,

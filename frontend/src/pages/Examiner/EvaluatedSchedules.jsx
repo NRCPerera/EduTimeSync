@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, AlertCircle, Search, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ExaminerHeader from '../../components/ExaminerHeader';
+import ExaminerHeader from '../../components/ExaminerComponents/ExaminerHeader';
 
 const EvaluatedSchedules = () => {
   const navigate = useNavigate();
