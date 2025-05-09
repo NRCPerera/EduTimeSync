@@ -100,3 +100,41 @@ exports.deleteModule = async (req, res) => {
     res.status(500).json({ success: false, error: error.message || 'Server error' });
   }
 };
+
+exports.updateModule = async (req, res) => {
+  try {
+    if (req.user.role !== 'Admin') {
+      return res.status(403).json({ success: false, error: 'Only Admins can update modules' });
+    }
+
+    const moduleId = req.params.id;
+    const { code, name, password } = req.body;
+
+    const module = await Module.findById(moduleId);
+    if (!module) {
+      return res.status(404).json({ success: false, error: 'Module not found' });
+    }
+
+    // Check if new code is unique (if code is being updated)
+    if (code && code !== module.code) {
+      const existingModule = await Module.findOne({ code });
+      if (existingModule) {
+        return res.status(400).json({ success: false, error: 'Module code already exists' });
+      }
+    }
+
+    const updatedModule = await Module.findByIdAndUpdate(
+      moduleId,
+      { code, name, password },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedModule,
+    });
+  } catch (error) {
+    console.error('Update module error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Server error' });
+  }
+};
