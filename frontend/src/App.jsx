@@ -20,7 +20,7 @@ import CreateModule from './pages/Admin/CreateModule';
 import ModuleList from './pages/Admin/ModuleList';
 import ModuleRegistration from './pages/Student/ModuleRegistration';
 import ScheduleEvent from './pages/LIC/ScheduleEvent';
-import EditModule from './pages/Admin/EditModule';
+import Enrollmodule from './pages/Student/Enrollmodules';
 
 
 const ProtectedRoute = ({ element, allowedRoles }) => {

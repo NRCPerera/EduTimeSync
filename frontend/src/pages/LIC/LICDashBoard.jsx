@@ -5,6 +5,7 @@ import LICNavbar from '../../components/LicComponents/LicNavbar';
 import FullCalendar from '../../components/LicComponents/FullCalendar';
 import dayGridPlugin from '@fullcalendar/daygrid';
 
+
 // Examiner List Component
 const ExaminerList = ({ examiners, onAssign }) => {
   return (
@@ -89,6 +90,8 @@ const LICDashBoard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
+  const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
 
   // Fetch user data
   const fetchUser = useCallback(async () => {
@@ -206,7 +209,7 @@ const LICDashBoard = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for notifications fetch');
 
-      const response = await fetch(`http://localhost:5000/api/rescheduleRequest/all`, {
+      const response = await fetch('http://localhost:5000/api/rescheduleRequest/all', {
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
@@ -240,7 +243,7 @@ const LICDashBoard = () => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No token for modules fetch');
 
-      const response = await fetch(`http://localhost:5000/api/module/all`, {
+      const response = await fetch('http://localhost:5000/api/module/all', {
         headers: {
           'Content-Type': 'application/json',
           'x-auth-token': token,
@@ -327,6 +330,39 @@ const LICDashBoard = () => {
     setError('Please select an event before assigning an examiner.');
   };
 
+  const generateReport = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/event/monthly/report/pdf?month=${reportMonth}&year=${reportYear}`,
+        {
+          headers: {
+            'x-auth-token': token,
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to generate report');
+      }
+  
+      // Get the PDF blob
+      const blob = await response.blob();
+      const monthName = new Date(reportYear, reportMonth - 1).toLocaleString('default', { month: 'long' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reschedule_Requests_${monthName}_${reportYear}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message);
+      console.error('Report generation error:', err);
+    }
+  };
+
 
   // Handle authentication failure
   if (!loading && authError) {
@@ -374,6 +410,7 @@ const LICDashBoard = () => {
                 <h1 className="text-2xl font-bold  text-gray-800">Welcome, {user?.name || 'LIC'}</h1>
                 <p className="text-gray-500">Lead Instructor Coordinator</p>
               </div>
+              
               <div className="flex space-x-4">
               </div>
             </div>
