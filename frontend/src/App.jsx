@@ -18,9 +18,9 @@ import UserManagement from './pages/Admin/UserManagement';
 import ExaminerRescheduleRequests from './pages/Examiner/ExaminerRescheduleRequests';
 import CreateModule from './pages/Admin/CreateModule';
 import ModuleList from './pages/Admin/ModuleList';
-import ModuleRegistration from './pages/Student/ModuleRegistration';
 import ScheduleEvent from './pages/LIC/ScheduleEvent';
 import Enrollmodule from './pages/Student/Enrollmodules';
+import EditModule from './pages/Admin/EditModule';
 
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
@@ -105,10 +105,6 @@ function App() {
           path="/std-evalutation"
           element={<ProtectedRoute element={<StdEvalutation />} allowedRoles={['Examiner']} />}
         />
-        <Route
-          path="/register-module"
-          element={<ProtectedRoute element={<ModuleRegistration />} allowedRoles={['Student']} />}
-        />
         
         <Route
           path="/schedule-event"
@@ -118,8 +114,13 @@ function App() {
           path="/lic-dashboard"
           element={<ProtectedRoute element={<LICDashboard />} allowedRoles={['LIC']} />}
         />
-        <Route path="/edit-module/:id"
-               element={<ProtectedRoute element={<EditModule />} allowedRoles={['Admin']} />} 
+        <Route 
+          path="/edit-module/:id"
+          element={<ProtectedRoute element={<EditModule />} allowedRoles={['Admin']} />} 
+        />
+        <Route 
+          path="/enroll-module"
+          element={<ProtectedRoute element={<Enrollmodule />} allowedRoles={['Student']} />} 
         />
 
       </Routes>

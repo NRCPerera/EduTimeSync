@@ -1,6 +1,8 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useEnrollment } from './EnrollmentContext'
+import { toast, ToastContainer } from 'react-toastify';
 
 export default function EnrollModal() {
   const { selectedModule, closeEnrollModal, enrollInModule } = useEnrollment()
@@ -8,28 +10,70 @@ export default function EnrollModal() {
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   if (!selectedModule) return null
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError('')
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setIsSubmitting(true);
 
-    // Simple validation
-    if (!moduleCode.trim() || !password.trim()) {
-      setError('Both module code and password are required')
-      setIsSubmitting(false)
-      return
+    if (!moduleCode || !password) {
+      setError('Please fill out all fields');
+      setIsSubmitting(false);
+      return;
     }
 
-    // Attempt to enroll
-    const success = enrollInModule(selectedModule.id, moduleCode, password)
-    
-    if (!success) {
-      setIsSubmitting(false)
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setError('You must be logged in to register for a module');
+      setIsSubmitting(false);
+      return;
     }
-  }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/module/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ moduleCode, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Server error: ${response.status}`);
+      }
+
+      // Display toast notification for success
+      toast.success(`Successfully registered for ${data.data.moduleName} (${data.data.moduleCode})!`, {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      setSuccess(`Successfully registered for ${data.data.moduleName} (${data.data.moduleCode})!`);
+      setModuleCode('');
+      setPassword('');
+    } catch (err) {
+      if (err.message === 'Failed to fetch') {
+        setError('Unable to connect to the server. Please check if the server is running at http://localhost:5000');
+      } else {
+        setError(err.message || 'An error occurred during registration');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { motion } from 'framer-motion';
 import { useEnrollment } from './EnrollmentContext';
 import img from '../../Image/EduTimeSync.png';
@@ -66,8 +67,8 @@ export default function ModuleCard({ module, index }) {
             disabled={enrolled}
             className={`w-full py-2 px-4 rounded-md font-medium text-center transition-colors ${
               enrolled
-                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                : 'bg-primary-600 text-white hover:bg-primary-700'
+                ? 'bg-blue-500 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-primary-700'
             }`}
           >
             {enrolled ? 'Enrolled' : 'Enroll'}

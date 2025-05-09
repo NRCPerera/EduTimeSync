@@ -217,15 +217,26 @@ const EventCard = ({ event, setSuccess, setError, fetchEvents, navigate, handleG
           <>
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-xl font-semibold text-indigo-800">{event.name}</h2>
-              <span
-                className={`text-xs font-medium py-1 px-3 rounded-full ${
-                  event.scheduleIds.length > 0
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}
-              >
-                {event.scheduleIds.length > 0 ? 'Scheduled' : 'Pending'}
-              </span>
+              <div className="flex items-center space-x-2">
+                <span
+                  className={`text-xs font-medium py-1 px-3 rounded-full ${
+                    event.scheduleIds.length > 0
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }`}
+                >
+                  {event.scheduleIds.length > 0 ? 'Scheduled' : 'Pending'}
+                </span>
+                <button
+                  onClick={() => handleGenerateEventReport(event._id)}
+                  className={`py-1 px-3 rounded-lg text-white text-sm font-medium transition-all ${
+                    loading ? 'bg-indigo-400 cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                  disabled={loading}
+                >
+                  Generate Report
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2 mb-6">
@@ -408,15 +419,6 @@ const EventCard = ({ event, setSuccess, setError, fetchEvents, navigate, handleG
                 )}
               </button>
               <div className="flex space-x-2">
-                <button
-                  onClick={() => handleGenerateEventReport(event._id)}
-                  className={`flex-1 py-2 px-4 rounded-lg text-white font-medium transition-all ${
-                    loading ? 'bg-indigo-400 cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700'
-                  }`}
-                  disabled={loading}
-                >
-                  Generate Report
-                </button>
                 <button
                   onClick={() => setIsEditing(true)}
                   className={`flex-1 py-2 px-4 rounded-lg text-white font-medium transition-all ${
