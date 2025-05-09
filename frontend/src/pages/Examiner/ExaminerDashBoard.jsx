@@ -5,7 +5,7 @@ import ExaminerHeader from '../../components/ExaminerComponents/ExaminerHeader';
 import TodayAgenda from '../../components/ExaminerComponents/TodayAgenda';
 import AvailabilityManager from '../../components/ExaminerComponents/AvailabilityManager';
 import UpcomingEvents from '../../components/ExaminerComponents/UpcomingEvents';
-import EvaluationZone from '../../components/ExaminerComponents/EvaluationZone';
+import EvaluationZone from '../../pages/Examiner/EvaluatedSchedules';
 import NotificationCenter from '../../components/ExaminerComponents/NotificationCenter';
 import SmartInsights from '../../components/ExaminerComponents/SmartInsights';
 import ExaminerSchedule from '../../pages/Examiner/ExaminerSchedule';
