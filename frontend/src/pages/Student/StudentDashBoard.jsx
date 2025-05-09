@@ -264,8 +264,8 @@ export default function StudentDashboard() {
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           
-          <button className={`px-4 py-2 rounded-md ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-colors duration-300`}>
-            Join Meeting
+          <button onClick={() => navigate('/sign-in')} className={`px-4 py-2 rounded-md ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-colors duration-300`}>
+            sign out
           </button>
         </div>
       </nav>

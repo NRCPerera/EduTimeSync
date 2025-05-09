@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, AlertCircle, Search, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ExaminerHeader from '../../components/ExaminerComponents/ExaminerHeader';
 
 const EvaluatedSchedules = () => {
   const navigate = useNavigate();
@@ -187,7 +186,6 @@ const EvaluatedSchedules = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      <ExaminerHeader />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="mb-6 bg-white rounded-lg p-4 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
