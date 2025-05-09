@@ -3,6 +3,7 @@ const User = require('../models/user');
 const Module = require('../models/Module');
 const Schedule = require('../models/Schedule');
 const axios = require('axios');
+const PDFDocument = require('pdfkit');
 
 exports.getEvents = async (req, res) => {
   try {
@@ -110,5 +111,85 @@ exports.deleteEvent = async (req, res) => {
   } catch (error) {
     console.error('Error deleting event:', error);
     res.status(500).json({ message: 'Server error while deleting event' });
+  }
+};
+
+exports.generateEventReport = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    let events;
+
+    if (eventId) {
+      const event = await Event.findById(eventId)
+        .populate('examinerIds', 'name')
+        .populate('module', 'code name');
+      if (!event) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
+      events = [event];
+    } else {
+      events = await Event.find()
+        .populate('examinerIds', 'name')
+        .populate('module', 'code name');
+    }
+
+    const doc = new PDFDocument({ margin: 50 });
+    let buffers = [];
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', () => {
+      const pdfData = Buffer.concat(buffers);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=event_report${eventId ? `_${eventId}` : ''}.pdf`);
+      res.status(200).send(pdfData);
+    });
+
+    // Title
+    doc.fontSize(20).text('Event Report', { align: 'center' });
+    doc.moveDown(2);
+
+    for (const event of events) {
+      const schedules = await Schedule.find({ eventId: event._id }).populate('studentId', 'name');
+      const students = schedules.map(schedule => ({
+        studentId: schedule.studentId._id,
+        name: schedule.studentId.name
+      }));
+
+      // Event Section
+      doc.fontSize(14).text(`Event: ${event.name}`, { underline: true });
+      doc.fontSize(12).text(`Module: ${event.module ? `${event.module.code} - ${event.module.name}` : 'N/A'}`);
+      doc.text(`Start Date: ${event.startDate.toISOString().split('T')[0]}`);
+      doc.text(`End Date: ${event.endDate.toISOString().split('T')[0]}`);
+      doc.text(`Duration: ${event.duration} minutes`);
+      doc.text(`Status: ${event.status}`);
+      doc.moveDown();
+
+      // Examiners Section
+      doc.fontSize(12).text('Examiners:', { underline: true });
+      if (event.examinerIds.length > 0) {
+        event.examinerIds.forEach(examiner => {
+          doc.text(`- ${examiner.name}`);
+        });
+      } else {
+        doc.text('No examiners assigned');
+      }
+      doc.moveDown();
+
+      // Students Section
+      doc.fontSize(12).text('Students:', { underline: true });
+      if (students.length > 0) {
+        students.forEach(student => {
+          doc.text(`- ${student.name}`);
+        });
+      } else {
+        doc.text('No students assigned');
+      }
+      doc.moveDown(2);
+    }
+
+    // Finalize PDF
+    doc.end();
+  } catch (error) {
+    console.error('Error generating event report:', error);
+    res.status(500).json({ message: 'Server error while generating event report' });
   }
 };

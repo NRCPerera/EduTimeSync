@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { Bell, Calendar, Users, BarChart3, MessageSquare, CalendarClock } from 'lucide-react';
 import ExaminerHeader from '../../components/ExaminerComponents/ExaminerHeader';
@@ -7,6 +8,7 @@ import UpcomingEvents from '../../components/ExaminerComponents/UpcomingEvents';
 import EvaluationZone from '../../components/ExaminerComponents/EvaluationZone';
 import NotificationCenter from '../../components/ExaminerComponents/NotificationCenter';
 import SmartInsights from '../../components/ExaminerComponents/SmartInsights';
+import ExaminerSchedule from '../../pages/Examiner/ExaminerSchedule';
 
 function ExaminerDashBoard() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -130,10 +132,9 @@ function ExaminerDashBoard() {
                   <SmartInsights />
                 </div>
               )}
-              {activeTab === 'settings' && (
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
-                  <p className="mt-2 text-gray-600">Settings page is under development.</p>
+              {activeTab === 'schedules' && (
+                <div className="bg-white rounded-lg shadow-md p-4">
+                  <ExaminerSchedule />
                 </div>
               )}
             </div>
