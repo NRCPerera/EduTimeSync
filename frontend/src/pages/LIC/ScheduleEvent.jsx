@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LICHeader from '../../components/LICHeader';
 import EventForm from '../../components/LicComponents/EventForm';
 import EventList from '../../components/LicComponents/EventList';
 import Notification from '../../components/LicComponents/Notification';

@@ -66,7 +66,7 @@ exports.createModule = async (req, res) => {
 
 exports.getAllModules = async (req, res) => {
   try {
-    if (!['Admin', 'LIC'].includes(req.user.role)) {
+    if (!['Admin', 'LIC', 'Student'].includes(req.user.role)) {
       return res.status(403).json({ success: false, error: 'Access restricted to Admins and LICs' });
     }
     const modules = await Module.find();

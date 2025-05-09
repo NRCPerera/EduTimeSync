@@ -20,6 +20,7 @@ import CreateModule from './pages/Admin/CreateModule';
 import ModuleList from './pages/Admin/ModuleList';
 import ModuleRegistration from './pages/Student/ModuleRegistration';
 import ScheduleEvent from './pages/LIC/ScheduleEvent';
+import Enrollmodule from './pages/Student/Enrollmodules';
 
 
 const ProtectedRoute = ({ element, allowedRoles }) => {
@@ -116,6 +117,10 @@ function App() {
         <Route
           path="/lic-dashboard"
           element={<ProtectedRoute element={<LICDashboard />} allowedRoles={['LIC']} />}
+        />
+        <Route
+          path='/enrollmodule'
+          element={<ProtectedRoute element={<Enrollmodule />} allowedRoles={['Student']} />}
         />
 
       </Routes>
